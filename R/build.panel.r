@@ -528,7 +528,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 			codes   <- as.character(curvars)
 			nanames <- curnames[na]
 			tmp     <- copy(tmp[,codes[-na],with=FALSE])
-			tmp[,(nanames) := NA_real_,with=FALSE]
+			tmp[, (nanames) := NA_real_]
 			setnames(tmp,c(curnames[-na],nanames))
 			setkey(tmp,interview)
 		} else {

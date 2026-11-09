@@ -1,4 +1,11 @@
 *********************
+* News in Version 2.3.1 (development)
+*********************
+
+* Fixed deprecated data.table syntax: with=FALSE combined with := raises an error since data.table 1.15.0 (a deprecated warning before), so build.panel() failed whenever a requested family variable was NA for a year.
+
+
+*********************
 * News in Version 2.1
 *********************
 

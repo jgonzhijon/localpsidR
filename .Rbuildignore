@@ -12,3 +12,5 @@ cookies.txt$
 ^\.Rproj\.user$
 .github
 _pkgdown.yml
+^PLAN\.md$
+^\.clinerules$
