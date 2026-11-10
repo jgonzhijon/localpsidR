@@ -280,3 +280,161 @@ psid_already_exists <- function(checkdir, name, format) {
 
   any(tolower(files) %in% target)
 }
+
+#' Import locally downloaded PSID files
+#'
+#' @description
+#' Imports PSID data files that the user downloaded manually (as zips,
+#' folders, or loose \code{.txt} + \code{.sas} pairs) into \code{.rda} or
+#' \code{.rds} files named \code{<PREFIX><year><suffix>.<format>} (for example
+#' \code{FAM2021ER.rda} or \code{IND2023ER.rda}). These are the names that
+#' \code{\link{build.panel}} expects.
+#'
+#' @details
+#' Output files use the \code{format} argument; \code{format = "rds"} files
+#' are not readable by \code{\link{build.panel}} in this version, so use the
+#' default \code{"rda"} when the files are meant for \code{\link{build.panel}}.
+#' Raw PSID files stay wherever the user keeps them; this package never
+#' uploads or transmits them.
+#'
+#' @param inputdir Directory holding the downloaded files.
+#' @param outputdir Directory where the imported files are written (created if
+#'   missing).
+#' @param prefix Job prefix, for example \code{"fam"} or \code{"ind"}.
+#' @param checkdir Directory checked for already-imported files. Defaults to
+#'   \code{outputdir}.
+#' @param overwrite Logical; re-import jobs whose target file already exists.
+#' @param format Either \code{"rda"} or \code{"rds"}.
+#' @param suffix Name suffix appended after the year.
+#'
+#' @return
+#' An invisible data.frame with columns \code{file}, \code{status}
+#' (\code{created}, \code{skipped} or \code{error}) and \code{message}.
+#'
+#' @seealso \code{\link{build.panel}}
+#' @export
+#' @examples
+#' \dontrun{
+#' processPSID("path/to/downloaded-psid", "path/to/psid-output", "fam")
+#' }
+processPSID <- function(inputdir, outputdir, prefix,
+                        checkdir = outputdir, overwrite = FALSE,
+                        format = c("rda", "rds"), suffix = "ER") {
+  format <- match.arg(format)
+
+  if (!dir.exists(inputdir)) {
+    stop("inputdir does not exist: ",
+         normalizePath(inputdir, mustWork = FALSE), call. = FALSE)
+  }
+
+  dir.create(outputdir, showWarnings = FALSE, recursive = TRUE)
+
+  jobs <- psid_find_jobs(inputdir, prefix)
+
+  if (length(jobs) == 0L) {
+    return(invisible(data.frame(file = character(0), status = character(0),
+                                message = character(0))))
+  }
+
+  res <- lapply(jobs, function(job) {
+    name <- psid_target_name(prefix, job$num, suffix)
+    out <- file.path(outputdir, paste0(name, ".", format))
+    label <- paste(basename(job$files), collapse = ", ")
+
+    if (!overwrite && psid_already_exists(checkdir, name, format)) {
+      futile.logger::flog.info("skipping %s: already exists", name)
+      return(data.frame(file = label, status = "skipped", message = "",
+                        stringsAsFactors = FALSE))
+    }
+
+    futile.logger::flog.info("importing %s", label)
+
+    tryCatch({
+      process_one(job$files, out, format)
+      data.frame(file = label, status = "created", message = "",
+                 stringsAsFactors = FALSE)
+    }, error = function(e) {
+      futile.logger::flog.warn("failed to import %s: %s", label,
+                               conditionMessage(e))
+      data.frame(file = label, status = "error",
+                 message = conditionMessage(e), stringsAsFactors = FALSE)
+    })
+  })
+
+  invisible(do.call(rbind, res))
+}
+
+#' Import locally downloaded PSID family files
+#'
+#' @description
+#' Imports family files (prefix \code{"fam"}) via \code{\link{processPSID}}.
+#'
+#' @param inputdir Directory holding the downloaded files.
+#' @param outputdir Directory where the imported files are written.
+#' @param ... Further arguments passed to \code{\link{processPSID}}.
+#'
+#' @return
+#' An invisible data.frame with columns \code{file}, \code{status} and
+#' \code{message}.
+#'
+#' @seealso \code{\link{processPSID}}, \code{\link{build.panel}}
+#' @export
+#' @examples
+#' \dontrun{
+#' getFamilyPSID("path/to/downloaded-psid", "path/to/psid-output")
+#' }
+getFamilyPSID <- function(inputdir, outputdir, ...) {
+  processPSID(inputdir, outputdir, prefix = "fam", ...)
+}
+
+#' Import locally downloaded PSID individual files
+#'
+#' @description
+#' Imports individual files (prefix \code{"ind"}) via
+#' \code{\link{processPSID}}.
+#'
+#' @param inputdir Directory holding the downloaded files.
+#' @param outputdir Directory where the imported files are written.
+#' @param ... Further arguments passed to \code{\link{processPSID}}.
+#'
+#' @return
+#' An invisible data.frame with columns \code{file}, \code{status} and
+#' \code{message}.
+#'
+#' @seealso \code{\link{processPSID}}, \code{\link{build.panel}}
+#' @export
+#' @examples
+#' \dontrun{
+#' getIndPSID("path/to/downloaded-psid", "path/to/psid-output")
+#' }
+getIndPSID <- function(inputdir, outputdir, ...) {
+  processPSID(inputdir, outputdir, prefix = "ind", ...)
+}
+
+#' Import locally downloaded PSID family and individual files
+#'
+#' @description
+#' Imports one or more prefixes (default \code{"fam"} and \code{"ind"}) via
+#' \code{\link{processPSID}} and combines the per-prefix results.
+#'
+#' @param inputdir Directory holding the downloaded files.
+#' @param outputdir Directory where the imported files are written.
+#' @param prefixes Character vector of prefixes to process.
+#' @param ... Further arguments passed to \code{\link{processPSID}}.
+#'
+#' @return
+#' An invisible data.frame with columns \code{file}, \code{status} and
+#' \code{message}.
+#'
+#' @seealso \code{\link{processPSID}}, \code{\link{build.panel}}
+#' @export
+#' @examples
+#' \dontrun{
+#' getPSID("path/to/downloaded-psid", "path/to/psid-output")
+#' }
+getPSID <- function(inputdir, outputdir, prefixes = c("fam", "ind"), ...) {
+  out <- lapply(prefixes, function(p) {
+    processPSID(inputdir, outputdir, prefix = p, ...)
+  })
+  invisible(do.call(rbind, out))
+}
