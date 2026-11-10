@@ -9,7 +9,7 @@ test_that("matching base names beat README and format files", {
   writeLines(c("DATA x;", "INPUT a 1-2;"), file.path(d, "A_formats.sas"))
 
   files <- list.files(d, recursive = TRUE, full.names = TRUE)
-  res <- psidR:::pick_pair(files)
+  res <- locapsidR:::pick_pair(files)
 
   expect_identical(basename(res$txt), "A.txt")
   expect_identical(basename(res$sas), "A.sas")
@@ -29,7 +29,7 @@ test_that("non-matching names pick the larger .txt with a warning", {
   futile.logger::flog.appender(futile.logger::appender.file(log))
   on.exit(futile.logger::flog.appender(old), add = TRUE)
 
-  res <- psidR:::pick_pair(files)
+  res <- locapsidR:::pick_pair(files)
 
   futile.logger::flog.appender(old)
   logged <- readLines(log)
@@ -48,7 +48,7 @@ test_that("a .sas without an INPUT block is ignored", {
   writeLines(c("DATA x;", "INPUT a 1-2;"), file.path(d, "B.sas"))
 
   files <- list.files(d, recursive = TRUE, full.names = TRUE)
-  res <- psidR:::pick_pair(files)
+  res <- locapsidR:::pick_pair(files)
 
   expect_identical(basename(res$txt), "B.txt")
   expect_identical(basename(res$sas), "B.sas")
@@ -70,7 +70,7 @@ test_that("__MACOSX paths and dot-prefixed base names are ignored", {
     file.path(d, ".hidden.txt")
   )
 
-  res <- psidR:::pick_pair(files)
+  res <- locapsidR:::pick_pair(files)
 
   expect_identical(basename(res$txt), "A.txt")
   expect_identical(basename(res$sas), "A.sas")
@@ -83,5 +83,5 @@ test_that("no valid pair errors and lists the file names", {
 
   files <- list.files(d, recursive = TRUE, full.names = TRUE)
 
-  expect_error(psidR:::pick_pair(files), "A.txt")
+  expect_error(locapsidR:::pick_pair(files), "A.txt")
 })

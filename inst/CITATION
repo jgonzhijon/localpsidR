@@ -1,13 +1,22 @@
-citHeader("To cite the 'psidR' package in publications use:")
-
-year = sub('.*(2[[:digit:]]{3})-.*', '\\1', meta$Date, perl = TRUE)
 vers = paste('R package version', meta$Version)
 
-bibentry('manual',
-  title = paste('psidR:', meta$Title),
-  author = 'Florian Oswald',
-  year = year,
-  note = vers,
-  url = meta$URL,
-  textVersion = paste('Florian Oswald (', year, '). psidR: ', meta$Title, '. ', vers, '.', sep = '')
+c(
+  bibentry('manual',
+    title = 'psidR: Build Panel Data Sets from PSID Raw Data',
+    author = 'Florian Oswald',
+    year = '2021',
+    url = 'https://github.com/floswald/psidR',
+    header = "Please cite the original psidR package. If you also use the adaptations added by locapsidR, cite locapsidR as well.",
+    textVersion = 'Florian Oswald (2021). psidR: Build Panel Data Sets from PSID Raw Data.'
+  ),
+  bibentry('manual',
+    title = paste('locapsidR:', meta$Title),
+    author = person('Juan', 'González Hijón',
+                    email = 'jgonzhijon@gmail.com'),
+    year = '2026',
+    note = c(vers, 'A fork of psidR by Florian Oswald.'),
+    url = 'https://github.com/jgonzhijon/locapsidR',
+    textVersion = paste('Juan González Hijón (2026). locapsidR: ',
+                        meta$Title, '. ', vers, '.', sep = '')
+  )
 )

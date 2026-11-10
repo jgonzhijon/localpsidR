@@ -1,4 +1,4 @@
 library(testthat)
-library(psidR)
+library(locapsidR)
 
-test_check("psidR")
+test_check("locapsidR")

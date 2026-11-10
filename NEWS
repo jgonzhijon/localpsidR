@@ -2,6 +2,7 @@
 * News in Version 2.3.1 (development)
 *********************
 
+* The package is renamed to locapsidR and the maintainer information is updated; the original credits and the license are kept.
 * Fixed deprecated data.table syntax: with=FALSE combined with := raises an error since data.table 1.15.0 (a deprecated warning before), so build.panel() failed whenever a requested family variable was NA for a year.
 * Added processPSID(), getFamilyPSID(), getIndPSID() and getPSID() for importing locally downloaded PSID files.
 * Added support for the PSID 2023 wave: a new row in the wave tables, the crosswalk psid.xlsx updated, and famvars.txt/indvars.txt extended to 2019, 2021 and 2023.

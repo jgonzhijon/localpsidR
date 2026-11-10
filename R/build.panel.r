@@ -102,7 +102,7 @@
 #'             paste0(my.dir,"/FAM1986ER.RData"),
 #'             paste0(my.dir,"/IND2019ER.RData"))
 #' 
-#' # END psidR example
+#' # END locapsidR example
 #' 
 #' # #####################################################################
 #' # Please go to https://github.com/floswald/psidR for more example usage
@@ -254,7 +254,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 		stop(
 			paste0("Missing PSID files in '", datadir, "': ",
 				paste(parts, collapse = "; "),
-				". Automatic download is not supported in this version of psidR. ",
+				". Automatic download is not supported in this version of locapsidR. ",
 				"Download the zips from the PSID Data Center, put them in one folder, ",
 				"run getPSID(inputdir, outputdir) (see ?getPSID), then call ",
 				"build.panel(datadir = outputdir, ...)."),
@@ -273,7 +273,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 	}
 	if (!(exists("ftype"))) stop("No .rda or .RData files found in directory\n you need to download data first.")
 
-	flog.info('psidR: Loading Family data from .rda files')
+	flog.info('locapsidR: Loading Family data from .rda files')
 	# familiy data downloaded directly into a dataframe
 	fam.dat  <- paste0(datadir,grep("FAM",l,value=TRUE,ignore.case=TRUE))
 	fam.dat  <- grep(paste(years,collapse="|"),fam.dat,value=TRUE)
@@ -293,9 +293,9 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 	ind      <- data.table(ind)
 	
 
-	flog.info('psidR: loaded individual file: %s',ind.file)
+	flog.info('locapsidR: loaded individual file: %s',ind.file)
 	vvs = ceiling(object.size(ind)/1024^2)
-	flog.info("psidR: total memory load in MB: %d",as.numeric(vvs))
+	flog.info("locapsidR: total memory load in MB: %d",as.numeric(vvs))
 
 	# output data.tables
 	datas <- vector("list",length(years))
@@ -318,8 +318,8 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 
 	w_ids <- makeids.wealth()
 
-		flog.debug('psidR: here is the list of hardcoded PSID variables')
-		flog.debug('psidR: The merge is based on equal values in ind.interview and fam.interview')
+		flog.debug('locapsidR: here is the list of hardcoded PSID variables')
+		flog.debug('locapsidR: The merge is based on equal values in ind.interview and fam.interview')
 		flog.debug("ids:",ids,capture=TRUE)
 	
 	# convert fam.vars to data.table
@@ -371,7 +371,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 	# loop over years
 	for (iy in 1:length(years)){
 		
-		flog.info('psidR: currently working on data for year %d',years[iy])
+		flog.info('locapsidR: currently working on data for year %d',years[iy])
 		
  
    		# keeping only relevant columns from individual file
@@ -665,7 +665,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 #' @export
 #' @returns No return value, called for side effects
 small.test.noind <- function(dd=NULL){
- 	cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+ 	cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
  	head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2003))
  	famvars = data.frame(year=c(2003),age=head_age_var_name)
  	build.panel(fam.vars=famvars,datadir=dd)
@@ -678,7 +678,7 @@ small.test.noind <- function(dd=NULL){
 #' @export
 #' @returns No return value, called for side effects
 small.test.ind <- function(dd=NULL){
- 	cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+ 	cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
  	head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2003))
  	educ = getNamesPSID("ER30323",cwf,years=2003)
  	famvars = data.frame(year=c(2003),age=head_age_var_name)
@@ -693,7 +693,7 @@ small.test.ind <- function(dd=NULL){
 #' @export
 #' @returns No return value, called for side effects
 medium.test.ind <- function(dd=NULL){
-	cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+	cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
 	head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2003,2005,2007))
  	educ = getNamesPSID("ER30323",cwf,years=c(2003,2005,2007))
 	famvars = data.frame(year=c(2003,2005,2007),age=head_age_var_name$variable)
@@ -707,7 +707,7 @@ medium.test.ind <- function(dd=NULL){
 #' @export
 #' @returns No return value, called for side effects
 medium.test.noind <- function(dd=NULL){
-  cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+  cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
   head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2003,2005,2007))
   famvars = data.frame(year=c(2003,2005,2007),age=head_age_var_name$variable)
   build.panel(fam.vars=famvars,datadir=dd)
@@ -720,7 +720,7 @@ medium.test.noind <- function(dd=NULL){
 #' @export
 #' @returns No return value, called for side effects
 medium.test.ind.NA <- function(dd=NULL){
-	cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+	cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
 	head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2003,2005,2007))
  	educ = getNamesPSID("ER30323",cwf,years=c(2003,2005,2007))
  	educ[2] = NA
@@ -737,11 +737,11 @@ medium.test.ind.NA <- function(dd=NULL){
 #' @returns description No return value, called for side effects
 medium.test.ind.NA.wealth <- function(dd=NULL){
     flog.warn("this functionality is not implemented any more.")
-# 	cwf = openxlsx::read.xlsx(system.file(package="psidR","psid-lists","psid.xlsx"))
+# 	cwf = openxlsx::read.xlsx(system.file(package="locapsidR","psid-lists","psid.xlsx"))
 # 	head_age_var_name <- getNamesPSID("ER17013", cwf, years=c(2005,2007))
 #  	educ = getNamesPSID("ER30323",cwf,years=c(2005,2007))
 #  	educ[2] = NA
-# 	r = system.file(package="psidR")
+# 	r = system.file(package="locapsidR")
 #     w = fread(file.path(r,"psid-lists","wealthvars-small.txt"))
 # 	famvars = data.frame(year=c(2005,2007),age=head_age_var_name)
 # 	indvars = data.frame(year=c(2005,2007),educ=educ)
@@ -759,7 +759,7 @@ medium.test.ind.NA.wealth <- function(dd=NULL){
 #' @returns a data.table with panel data
 build.psid <- function(datadr="~/datasets/psid/",small=TRUE){
   variable <- name <- NULL
-  r = system.file(package="psidR")
+  r = system.file(package="locapsidR")
   if (small){
     f = fread(file.path(r,"psid-lists","famvars-small.txt"))
     i = fread(file.path(r,"psid-lists","indvars-small.txt"))
@@ -805,7 +805,7 @@ build.psid <- function(datadr="~/datasets/psid/",small=TRUE){
 #' @export
 #' @examples
 #' # read UMich crosswalk from installed file
-#' r = system.file(package="psidR")
+#' r = system.file(package="locapsidR")
 #' cwf = openxlsx::read.xlsx(file.path(r,"psid-lists","psid.xlsx"))
 #' 
 #' # or download directly

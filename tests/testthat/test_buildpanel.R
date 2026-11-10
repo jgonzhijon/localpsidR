@@ -4,7 +4,7 @@ context("test build.panel")
 
 n=1000
 attr = 7
-my.dir = system.file(package = "psidR","testdata")
+my.dir = system.file(package = "locapsidR","testdata")
 # test data was created like this:
 # td = testPSID(N=n,N.attr=attr)
 # fam1985 <- copy(td$famvars1985)

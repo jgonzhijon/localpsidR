@@ -1,7 +1,7 @@
 
 
 # build PSID panel data
-library(psidR)
+library(locapsidR)
 f = fread("famvars.txt")
 i = fread("indvars.txt")
 

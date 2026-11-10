@@ -38,7 +38,7 @@ Ask for one variable at a time.
 }
 \examples{
 # read UMich crosswalk from installed file
-r = system.file(package="psidR")
+r = system.file(package="locapsidR")
 cwf = openxlsx::read.xlsx(file.path(r,"psid-lists","psid.xlsx"))
 
 # or download directly
