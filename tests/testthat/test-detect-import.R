@@ -3,23 +3,6 @@ context("detect import")
 skip_if_not_installed("SAScii")
 skip_if_not_installed("zip")
 
-# Evaluate `code` while capturing futile.logger output to a file.
-with_log_capture <- function(code) {
-  log <- tempfile(fileext = ".log")
-  old_app <- futile.logger::flog.appender()
-  old_thresh <- futile.logger::flog.threshold()
-  futile.logger::flog.appender(futile.logger::appender.file(log))
-  futile.logger::flog.threshold(futile.logger::INFO)
-  on.exit({
-    futile.logger::flog.appender(old_app)
-    futile.logger::flog.threshold(old_thresh)
-  }, add = TRUE)
-  value <- force(code)
-  futile.logger::flog.appender(old_app)
-  futile.logger::flog.threshold(old_thresh)
-  list(value = value, log = readLines(log))
-}
-
 # Synthetic IND triple labels for the given years.
 ind_labels <- function(years) {
   out <- list()
@@ -63,7 +46,7 @@ test_that("IND then FAM detection builds and updates the CSV", {
   labels <- ind_labels(c(2063, 2065, latest))
   make_zip(inputdir, build, "IND2065ER", labels)
 
-  captured <- with_log_capture({
+  captured <- capture_flog({
     processPSID(inputdir, outputdir, "ind")
   })
   expect_identical(captured$value$status, "created")
@@ -82,7 +65,7 @@ test_that("IND then FAM detection builds and updates the CSV", {
                            stringsAsFactors = FALSE)
   make_zip(inputdir, build, "FAM2065ER", fam_labels)
 
-  captured2 <- with_log_capture({
+  captured2 <- capture_flog({
     processPSID(inputdir, outputdir, "fam")
   })
   expect_identical(captured2$value$status, "created")
@@ -96,7 +79,7 @@ test_that("IND then FAM detection builds and updates the CSV", {
   expect_identical(row2065$ind.head, got[got$year == 2065L, ]$ind.head)
   expect_true(is.na(got2[got2$year == 2063L, ]$fam.interview))
 
-  with_log_capture({
+  capture_flog({
     processPSID(inputdir, outputdir, "ind", overwrite = TRUE)
     processPSID(inputdir, outputdir, "fam", overwrite = TRUE)
   })
@@ -113,7 +96,7 @@ test_that("labels for built-in years only do not create a CSV", {
 
   make_zip(inputdir, build, "IND2065ER", ind_labels(psidR:::psid_latest_wave()))
 
-  captured <- with_log_capture({
+  captured <- capture_flog({
     processPSID(inputdir, outputdir, "ind")
   })
 
@@ -134,7 +117,7 @@ test_that("no matching labels still import and warn", {
   zip_files(file.path(build, c("IND2065ER.txt", "IND2065ER.sas")),
             file.path(inputdir, "IND2065ER.zip"))
 
-  captured <- with_log_capture({
+  captured <- capture_flog({
     processPSID(inputdir, outputdir, "ind")
   })
 
@@ -156,7 +139,7 @@ test_that("FAM label year mismatch warns and does not store", {
                            stringsAsFactors = FALSE)
   make_zip(inputdir, build, "FAM2065ER", fam_labels)
 
-  captured <- with_log_capture({
+  captured <- capture_flog({
     processPSID(inputdir, outputdir, "fam")
   })
 
@@ -180,7 +163,7 @@ test_that("an unreadable existing CSV is left untouched", {
 
   make_zip(inputdir, build, "IND2065ER", ind_labels(c(2063, 2065)))
 
-  captured <- with_log_capture({
+  captured <- capture_flog({
     processPSID(inputdir, outputdir, "ind")
   })
 
@@ -198,7 +181,7 @@ test_that("psid_pick_ind_file never returns the CSV", {
 
   make_zip(inputdir, build, "IND2065ER", ind_labels(c(2063, 2065)))
 
-  with_log_capture({
+  capture_flog({
     processPSID(inputdir, outputdir, "ind")
   })
 

@@ -132,7 +132,7 @@ psid_merge_detected <- function(dir, new) {
     }
     old <- old[, cols, drop = FALSE]
     old$year <- as.integer(old$year)
-    for (c in char_cols) old[[c]] <- as.character(old[[c]])
+    for (col in char_cols) old[[col]] <- as.character(old[[col]])
   }
 
   new_full <- new_full[!(new_full$year %in% makeids()$year), , drop = FALSE]
@@ -148,10 +148,10 @@ psid_merge_detected <- function(dir, new) {
     if (length(idx) == 0L) {
       merged <- rbind(merged, new_full[i, , drop = FALSE])
     } else {
-      for (c in char_cols) {
-        val <- new_full[[c]][i]
+      for (col in char_cols) {
+        val <- new_full[[col]][i]
         if (!is.na(val)) {
-          merged[[c]][idx] <- val
+          merged[[col]][idx] <- val
         }
       }
     }
