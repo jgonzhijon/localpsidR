@@ -8,16 +8,13 @@ Authors@R: c(
            email = "jgonzhijon@gmail.com"),
     person("Florian", "Oswald", role = "aut",
            email = "florian.oswald@gmail.com"))
-Description: Makes it easy to build panel data in wide format from Panel Survey
-    of Income Dynamics (PSID) delivered raw data. Downloads data directly from
-    the PSID server using the 'SAScii' package. 'localpsidR' takes care of merging
-    data from each wave onto a cross-period index file, so that individuals can be
-    followed over time. The user must specify which years they are interested in,
-    and the 'PSID' variable names (e.g. ER21003) for each year (they differ in each
-    year). The package offers helper functions to retrieve variable names from different
-    waves. There are different panel data designs and sample subsetting criteria
-    implemented ("SRC", "SEO", "immigrant" and "latino" samples). More information about 
-    the PSID can be obtained at <https://simba.isr.umich.edu/data/data.aspx>.
+Description: Merges Panel Study of Income Dynamics (PSID) family and
+    individual files into a wide-format panel data set. The user obtains the
+    files from the PSID data center; the package does not download data and
+    does not handle credentials. Files are imported once with getPSID(),
+    which uses the 'SAScii' package to read the SAS layout files, and the
+    panel is built with build.panel(). It is a fork of 'psidR' by Florian
+    Oswald.
 Depends: R (>= 3.5.0)
 URL: https://github.com/jgonzhijon/localpsidR
 BugReports: https://github.com/jgonzhijon/localpsidR/issues

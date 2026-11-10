@@ -14,7 +14,7 @@ c(
     author = person('Juan', 'González Hijón',
                     email = 'jgonzhijon@gmail.com'),
     year = '2026',
-    note = c(vers, 'A fork of psidR by Florian Oswald.'),
+    note = paste0(vers, '. A fork of psidR by Florian Oswald.'),
     url = 'https://github.com/jgonzhijon/localpsidR',
     textVersion = paste('Juan González Hijón (2026). localpsidR: ',
                         meta$Title, '. ', vers, '.', sep = '')
