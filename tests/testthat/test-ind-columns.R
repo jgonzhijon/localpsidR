@@ -4,16 +4,16 @@ test_that("build.panel errors when the index lacks the requested year columns", 
   n <- 20L
   d <- fake_psid_datadir(c(1985, 1986), n = n)
 
-  ids <- locapsidR:::makeids()
+  ids <- localpsidR:::makeids()
   row1986 <- ids[list(1986)]
   drop_cols <- c(row1986$ind.interview, row1986$ind.seq, row1986$ind.head)
 
   env <- new.env()
-  load(file.path(d$dir, paste0(locapsidR:::psid_ind_name(), ".rda")), envir = env)
+  load(file.path(d$dir, paste0(localpsidR:::psid_ind_name(), ".rda")), envir = env)
   ind <- get(ls(env), env)
   ind <- ind[, !(toupper(names(ind)) %in% drop_cols)]
   x <- ind
-  save(x, file = file.path(d$dir, paste0(locapsidR:::psid_ind_name(), ".rda")))
+  save(x, file = file.path(d$dir, paste0(localpsidR:::psid_ind_name(), ".rda")))
 
   fam.vars <- data.frame(year = c(1985, 1986), v = c("FAMVAR1", "FAMVAR1"))
 

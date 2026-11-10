@@ -13,7 +13,7 @@ test_that("build.panel errors clearly when no files are present", {
 
   expect_match(err, "getPSID")
   expect_match(err, "FAM1985ER")
-  expect_match(err, locapsidR:::psid_ind_name())
+  expect_match(err, localpsidR:::psid_ind_name())
 })
 
 test_that("build.panel errors when only the index file is present", {

@@ -41,7 +41,7 @@ test_that("IND then FAM detection builds and updates the CSV", {
   outputdir <- tempfile("output_")
   build <- tempfile("build_")
   dir.create(build)
-  latest <- locapsidR:::psid_latest_wave()
+  latest <- localpsidR:::psid_latest_wave()
 
   labels <- ind_labels(c(2063, 2065, latest))
   make_zip(inputdir, build, "IND2065ER", labels)
@@ -94,7 +94,7 @@ test_that("labels for built-in years only do not create a CSV", {
   build <- tempfile("build_")
   dir.create(build)
 
-  make_zip(inputdir, build, "IND2065ER", ind_labels(locapsidR:::psid_latest_wave()))
+  make_zip(inputdir, build, "IND2065ER", ind_labels(localpsidR:::psid_latest_wave()))
 
   captured <- capture_flog({
     processPSID(inputdir, outputdir, "ind")
@@ -188,7 +188,7 @@ test_that("psid_pick_ind_file never returns the CSV", {
   files <- list.files(outputdir)
   expect_true("IND2065ER.rda" %in% files)
   expect_true("psid_waves_detected.csv" %in% files)
-  expect_identical(locapsidR:::psid_pick_ind_file(files), "IND2065ER.rda")
+  expect_identical(localpsidR:::psid_pick_ind_file(files), "IND2065ER.rda")
 })
 
 test_that("psid_merge_detected merges field by field", {
@@ -205,10 +205,10 @@ test_that("psid_merge_detected merges field by field", {
   new4 <- data.frame(year = 2063L, fam.interview = "ERT00009",
                      stringsAsFactors = FALSE)
 
-  locapsidR:::psid_merge_detected(dir, new1)
-  locapsidR:::psid_merge_detected(dir, new2)
-  locapsidR:::psid_merge_detected(dir, new3)
-  locapsidR:::psid_merge_detected(dir, new4)
+  localpsidR:::psid_merge_detected(dir, new1)
+  localpsidR:::psid_merge_detected(dir, new2)
+  localpsidR:::psid_merge_detected(dir, new3)
+  localpsidR:::psid_merge_detected(dir, new4)
 
   got <- data.table::fread(file.path(dir, "psid_waves_detected.csv"),
                            na.strings = "", data.table = FALSE)

@@ -13,7 +13,7 @@ test_that("zip input produces an .rda with a single object named x", {
   zip_files(list.files(d, full.names = TRUE), z)
 
   out <- tempfile(fileext = ".rda")
-  res <- locapsidR:::process_one(z, out)
+  res <- localpsidR:::process_one(z, out)
 
   expect_identical(res, out)
 
@@ -33,7 +33,7 @@ test_that("rds format works with loose files", {
   write_fixed_width(df, d, "A")
 
   out <- tempfile(fileext = ".rds")
-  locapsidR:::process_one(list.files(d, full.names = TRUE), out, format = "rds")
+  localpsidR:::process_one(list.files(d, full.names = TRUE), out, format = "rds")
 
   x <- readRDS(out)
   expect_true(is.data.frame(x))
@@ -50,7 +50,7 @@ test_that("directory input works and leaves the .sas unchanged", {
   sas_md5 <- tools::md5sum(paths[["sas"]])
 
   out <- tempfile(fileext = ".rda")
-  locapsidR:::process_one(d, out)
+  localpsidR:::process_one(d, out)
 
   expect_identical(tools::md5sum(paths[["sas"]]), sas_md5)
 
@@ -70,7 +70,7 @@ test_that("a zip without a .sas errors and leaves no output behind", {
   zip_files(file.path(d, "A.txt"), z)
 
   out <- tempfile(fileext = ".rda")
-  expect_error(locapsidR:::process_one(z, out))
+  expect_error(localpsidR:::process_one(z, out))
 
   expect_false(file.exists(out))
   expect_false(file.exists(paste0(out, ".part")))
@@ -91,7 +91,7 @@ test_that("the extraction directory is removed after success and error", {
   out <- tempfile(fileext = ".rda")
 
   before <- psid_dirs()
-  locapsidR:::process_one(z, out)
+  localpsidR:::process_one(z, out)
   expect_setequal(psid_dirs(), before)
 
   bad <- tempfile("fixture_bad_")
@@ -102,7 +102,7 @@ test_that("the extraction directory is removed after success and error", {
 
   out2 <- tempfile(fileext = ".rda")
   before <- psid_dirs()
-  expect_error(locapsidR:::process_one(z2, out2))
+  expect_error(localpsidR:::process_one(z2, out2))
   expect_setequal(psid_dirs(), before)
 })
 
@@ -120,7 +120,7 @@ test_that("a zip with a path traversal entry is rejected", {
   unlink(outside)
 
   out <- tempfile(fileext = ".rda")
-  err <- tryCatch(locapsidR:::process_one(z, out), error = function(e) e)
+  err <- tryCatch(localpsidR:::process_one(z, out), error = function(e) e)
 
   expect_s3_class(err, "error")
   expect_match(conditionMessage(err), "../evil.txt", fixed = TRUE)

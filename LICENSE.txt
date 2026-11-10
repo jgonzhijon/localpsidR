@@ -1,4 +1,4 @@
-locapsidR: R Package to Build Panel Data Sets from PSID Raw Data
+localpsidR: R Package to Build Panel Data Sets from PSID Raw Data
 Copyright (C) 2015 florian.oswald@gmail.com
 Copyright (C) 2026 Juan González Hijón
 

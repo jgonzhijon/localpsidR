@@ -36,7 +36,7 @@ test_that("a full synthetic set is detected with no rejections", {
   years <- c(1968:1997, as.integer(seq(1999, 2025, by = 2)))
   labels <- make_ind_labels(years)
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_identical(names(res$waves),
                    c("year", "ind.interview", "ind.seq", "ind.head"))
@@ -51,7 +51,7 @@ test_that("a missing variable rejects only that wave", {
   labels <- make_ind_labels(c(1969, 1970))
   labels <- labels[!(labels$var == sprintf("ERT%05d", 1970L * 10L + 2L)), ]
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_true(1969 %in% res$waves$year)
   expect_true(1970 %in% res$rejected$year)
@@ -65,7 +65,7 @@ test_that("a duplicated label rejects only that wave", {
                              label = "RELATION TO HEAD 70",
                              stringsAsFactors = FALSE))
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_true(1969 %in% res$waves$year)
   expect_true(1970 %in% res$rejected$year)
@@ -76,7 +76,7 @@ test_that("a broken consecutive rule rejects only that wave", {
   labels <- make_ind_labels(1969)
   labels$var[3L] <- sprintf("ERT%05d", 1969L * 10L + 3L)  # make relation non-consecutive
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_true(1969 %in% res$rejected$year)
   expect_match(res$rejected$reason[res$rejected$year == 1969], "1969")
@@ -86,7 +86,7 @@ test_that("a two-digit year that disagrees rejects only that wave", {
   labels <- make_ind_labels(1969)
   labels$label[3L] <- "RELATION TO HEAD 70"  # 1970, not 1969
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_false(1969 %in% res$waves$year)
   expect_true(1969 %in% res$rejected$year)
@@ -100,7 +100,7 @@ test_that("the RELATIONSHIP TO RESPONDENT lookalike does not match", {
                              label = "RELATIONSHIP TO RESPONDENT 95",
                              stringsAsFactors = FALSE))
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_true(1995 %in% res$waves$year)
   expect_identical(res$waves$ind.head[res$waves$year == 1995],
@@ -112,7 +112,7 @@ test_that("an interview-only label is rejected by the IND detector", {
                        label = "1980 INTERVIEW NUMBER",
                        stringsAsFactors = FALSE)
 
-  res <- locapsidR:::psid_detect_ind_waves(labels)
+  res <- localpsidR:::psid_detect_ind_waves(labels)
 
   expect_equal(nrow(res$waves), 0L)
   expect_true(1980 %in% res$rejected$year)
@@ -123,7 +123,7 @@ test_that("an invalid relation variable name rejects only that wave", {
   labels <- make_ind_labels(c(1969, 1970))
   labels$var[labels$var == sprintf("ERT%05d", 1969L * 10L + 2L)] <- "AGE_1"
 
-  res <- expect_warning(locapsidR:::psid_detect_ind_waves(labels), NA)
+  res <- expect_warning(localpsidR:::psid_detect_ind_waves(labels), NA)
 
   expect_true(1969 %in% res$rejected$year)
   expect_match(res$rejected$reason[res$rejected$year == 1969], "1969")
@@ -134,7 +134,7 @@ test_that("the FAM detector handles modern, older, duplicated and missing forms"
   modern <- data.frame(var = "ERT0001",
                        label = "2023 FAMILY INTERVIEW (ID) NUMBER",
                        stringsAsFactors = FALSE)
-  res <- locapsidR:::psid_detect_fam_wave(modern)
+  res <- localpsidR:::psid_detect_fam_wave(modern)
   expect_identical(res$wave$year, 2023L)
   expect_identical(res$wave$fam.interview, "ERT0001")
   expect_identical(res$reason, "")
@@ -143,7 +143,7 @@ test_that("the FAM detector handles modern, older, duplicated and missing forms"
                 "INTERVIEW NUMBER 68")) {
     old_labels <- data.frame(var = "ERT0002", label = lab,
                              stringsAsFactors = FALSE)
-    res_old <- locapsidR:::psid_detect_fam_wave(old_labels)
+    res_old <- localpsidR:::psid_detect_fam_wave(old_labels)
     expect_null(res_old$wave)
     expect_true(nzchar(res_old$reason))
   }
@@ -154,13 +154,13 @@ test_that("the FAM detector handles modern, older, duplicated and missing forms"
               "2023 FAMILY INTERVIEW (ID) NUMBER"),
     stringsAsFactors = FALSE
   )
-  res_dup <- locapsidR:::psid_detect_fam_wave(dup)
+  res_dup <- localpsidR:::psid_detect_fam_wave(dup)
   expect_null(res_dup$wave)
   expect_true(nzchar(res_dup$reason))
 
   none_labels <- data.frame(var = "ERT0005", label = "AGE",
                             stringsAsFactors = FALSE)
-  res_none <- locapsidR:::psid_detect_fam_wave(none_labels)
+  res_none <- localpsidR:::psid_detect_fam_wave(none_labels)
   expect_null(res_none$wave)
   expect_true(nzchar(res_none$reason))
 })
@@ -169,13 +169,13 @@ test_that("empty labels produce zero rows / NULL without error", {
   empty <- data.frame(var = character(), label = character(),
                       stringsAsFactors = FALSE)
 
-  res_ind <- locapsidR:::psid_detect_ind_waves(empty)
+  res_ind <- localpsidR:::psid_detect_ind_waves(empty)
   expect_equal(nrow(res_ind$waves), 0L)
   expect_equal(nrow(res_ind$rejected), 0L)
   expect_identical(names(res_ind$waves),
                    c("year", "ind.interview", "ind.seq", "ind.head"))
 
-  res_fam <- locapsidR:::psid_detect_fam_wave(empty)
+  res_fam <- localpsidR:::psid_detect_fam_wave(empty)
   expect_null(res_fam$wave)
   expect_true(nzchar(res_fam$reason))
 })
@@ -184,7 +184,7 @@ test_that("local SAS dir reproduces built-in years", {
   dir <- Sys.getenv("PSID_LOCAL_SAS_DIR")
   skip_if_not(nzchar(dir))
 
-  ids <- locapsidR:::makeids()
+  ids <- localpsidR:::makeids()
 
   ind_files <- list.files(dir, pattern = "^IND[0-9]{4}ER\\.sas$",
                           recursive = TRUE, full.names = TRUE,
@@ -200,8 +200,8 @@ test_that("local SAS dir reproduces built-in years", {
     ind_year <- as.integer(sub(".*IND([0-9]{4})ER\\.sas$", "\\1",
                                basename(ind_files)))
     ind_files <- ind_files[which.max(ind_year)]
-    labels <- do.call(rbind, lapply(ind_files, locapsidR:::psid_parse_sas_labels))
-    res <- locapsidR:::psid_detect_ind_waves(labels)
+    labels <- do.call(rbind, lapply(ind_files, localpsidR:::psid_parse_sas_labels))
+    res <- localpsidR:::psid_detect_ind_waves(labels)
     o <- match(as.integer(ids$year), res$waves$year)
     expect_identical(res$waves$year[o], as.integer(ids$year))
     expect_identical(res$waves$ind.interview[o],
@@ -213,8 +213,8 @@ test_that("local SAS dir reproduces built-in years", {
   for (f in fam_files) {
     y <- as.integer(sub(".*FAM([0-9]{4})ER\\.sas$", "\\1", basename(f)))
     if (y >= 1999L) {
-      labels <- locapsidR:::psid_parse_sas_labels(f)
-      res_fam <- locapsidR:::psid_detect_fam_wave(labels)
+      labels <- localpsidR:::psid_parse_sas_labels(f)
+      res_fam <- localpsidR:::psid_detect_fam_wave(labels)
       y_idx <- which(as.integer(ids$year) == y)
       expected_fam <- as.character(ids$fam.interview[y_idx])
       expect_identical(res_fam$wave$fam.interview, expected_fam)

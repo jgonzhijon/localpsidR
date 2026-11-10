@@ -12,7 +12,7 @@ fake_psid_datadir <- function(years, n = 20L, dir = tempfile("psid_fake_"),
                               ind_year = NULL, extra = NULL) {
   stopifnot(is.numeric(years), length(years) >= 1L)
 
-  ids <- locapsidR:::makeids(extra)
+  ids <- localpsidR:::makeids(extra)
 
   if (is.null(ind_year)) {
     ind_year <- max(ids$year)

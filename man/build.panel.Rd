@@ -134,7 +134,7 @@ file.remove(paste0(my.dir,"/FAM1985ER.rda"),
             paste0(my.dir,"/FAM1986ER.RData"),
             paste0(my.dir,"/IND2019ER.RData"))
 
-# END locapsidR example
+# END localpsidR example
 
 # #####################################################################
 # Please go to https://github.com/floswald/psidR for more example usage

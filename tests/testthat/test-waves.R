@@ -1,7 +1,7 @@
 context("wave helpers")
 
 test_that("the first 42 supported waves match the historical prefix", {
-  waves <- locapsidR:::psid_supported_waves()
+  waves <- localpsidR:::psid_supported_waves()
 
   expect_identical(waves[seq_len(42)], c(1968:1997, seq(1999, 2021, 2)))
   expect_true(!is.unsorted(waves, strictly = TRUE))
@@ -9,20 +9,20 @@ test_that("the first 42 supported waves match the historical prefix", {
 })
 
 test_that("check_supported_waves accepts supported years and rejects others", {
-  expect_silent(locapsidR:::check_supported_waves(2021))
-  expect_error(locapsidR:::check_supported_waves(1998), "1998")
-  expect_error(locapsidR:::check_supported_waves(c(2021, 2099)), "2099")
+  expect_silent(localpsidR:::check_supported_waves(2021))
+  expect_error(localpsidR:::check_supported_waves(1998), "1998")
+  expect_error(localpsidR:::check_supported_waves(c(2021, 2099)), "2099")
 })
 
 test_that("psid_family_table years are a subset of makeids years", {
-  fam_years <- locapsidR:::psid_family_table()$year
-  ids_years <- locapsidR:::makeids()$year
+  fam_years <- localpsidR:::psid_family_table()$year
+  ids_years <- localpsidR:::makeids()$year
 
   expect_true(all(fam_years %in% ids_years))
 })
 
 test_that("makeids per-year vectors are internally consistent", {
-  ids <- locapsidR:::makeids()
+  ids <- localpsidR:::makeids()
   n <- nrow(ids)
 
   for (col in c("ind.interview", "ind.seq", "ind.head", "fam.interview",
@@ -44,26 +44,26 @@ test_that("makeids per-year vectors are internally consistent", {
 
 test_that("psid_pick_ind_file picks the highest year and prefers .rda", {
   expect_identical(
-    locapsidR:::psid_pick_ind_file(
+    localpsidR:::psid_pick_ind_file(
       c("IND2019ER.rda", "IND2021ER.RData", "FAM2021ER.rda", "psid_waves.csv")
     ),
     "IND2021ER.RData"
   )
 
   expect_identical(
-    locapsidR:::psid_pick_ind_file(c("IND2021ER.rda", "IND2021ER.RData")),
+    localpsidR:::psid_pick_ind_file(c("IND2021ER.rda", "IND2021ER.RData")),
     "IND2021ER.rda"
   )
 })
 
 test_that("psid_pick_ind_file returns character(0) when no index matches", {
   expect_identical(
-    locapsidR:::psid_pick_ind_file(c("FAM2021ER.rda", "psid_waves.csv")),
+    localpsidR:::psid_pick_ind_file(c("FAM2021ER.rda", "psid_waves.csv")),
     character(0)
   )
 })
 
 test_that("psid_pick_ind_file accepts lower-case names and ignores lookalikes", {
-  expect_identical(locapsidR:::psid_pick_ind_file("ind2021er.rda"), "ind2021er.rda")
-  expect_identical(locapsidR:::psid_pick_ind_file("IND2021ER_old.rda"), character(0))
+  expect_identical(localpsidR:::psid_pick_ind_file("ind2021er.rda"), "ind2021er.rda")
+  expect_identical(localpsidR:::psid_pick_ind_file("IND2021ER_old.rda"), character(0))
 })

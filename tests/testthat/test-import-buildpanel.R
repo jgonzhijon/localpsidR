@@ -5,7 +5,7 @@ skip_if_not_installed("zip")
 
 test_that("getPSID output builds the same panel as the fixture datadir", {
   d <- fake_psid_datadir(c(1985, 1986))
-  ind_year <- max(locapsidR:::makeids()$year)
+  ind_year <- max(localpsidR:::makeids()$year)
 
   inputdir <- tempfile("input_")
   dir.create(inputdir)

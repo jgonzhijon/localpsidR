@@ -1,4 +1,4 @@
 library(testthat)
-library(locapsidR)
+library(localpsidR)
 
-test_check("locapsidR")
+test_check("localpsidR")

@@ -15,8 +15,8 @@ if (!file.exists("DESCRIPTION")) {
   stop("run this script from the repository root", call. = FALSE)
 }
 desc_lines <- readLines("DESCRIPTION")
-if (!any(trimws(desc_lines) == "Package: locapsidR")) {
-  stop("DESCRIPTION does not declare 'Package: locapsidR'; run from the repository root",
+if (!any(trimws(desc_lines) == "Package: localpsidR")) {
+  stop("DESCRIPTION does not declare 'Package: localpsidR'; run from the repository root",
        call. = FALSE)
 }
 

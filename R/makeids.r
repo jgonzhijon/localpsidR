@@ -334,10 +334,10 @@ check_supported_waves <- function(years, extra_years = NULL) {
   bad <- setdiff(years, psid_supported_waves(extra_years))
   if (length(bad) > 0L) {
     stop(
-      "Your locapsidR version does not support wave(s): ",
+      "Your localpsidR version does not support wave(s): ",
       paste(bad, collapse = ", "),
-      ". Install a newer locapsidR (e.g. ",
-      "remotes::install_github('jgonzhijon/locapsidR')) or remove those years."
+      ". Install a newer localpsidR (e.g. ",
+      "remotes::install_github('jgonzhijon/localpsidR')) or remove those years."
     )
   }
   invisible(NULL)

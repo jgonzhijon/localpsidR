@@ -1,16 +1,16 @@
-# locapsidR
+# localpsidR
 
-locapsidR builds wide-format panel data sets from Panel Study of Income
+localpsidR builds wide-format panel data sets from Panel Study of Income
 Dynamics (PSID) raw data. It is a fork of
 [psidR](https://github.com/floswald/psidR) by Florian Oswald, and the
 original authors keep full credit for the package.
 
-[![R-CMD-check](https://github.com/jgonzhijon/locapsidR/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/jgonzhijon/locapsidR/actions/workflows/check-standard.yaml)
+[![R-CMD-check](https://github.com/jgonzhijon/localpsidR/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/jgonzhijon/localpsidR/actions/workflows/check-standard.yaml)
 
 ## Installation
 
 ```r
-remotes::install_github("jgonzhijon/locapsidR")
+remotes::install_github("jgonzhijon/localpsidR")
 ```
 
 `install.packages("psidR")` installs the original package, not this fork.
@@ -111,15 +111,15 @@ build.panel(datadir = "~/psid", fam.vars = f, ind.vars = i,
 ```
 
 ```text
-INFO [2018-10-10 11:28:25] locapsidR: Loading Family data from .rda files
-INFO [2018-10-10 11:28:34] locapsidR: loaded individual file: ~/psid/IND2015ER.rda
-INFO [2018-10-10 11:28:34] locapsidR: total memory load in MB: 1252
+INFO [2018-10-10 11:28:25] localpsidR: Loading Family data from .rda files
+INFO [2018-10-10 11:28:34] localpsidR: loaded individual file: ~/psid/IND2015ER.rda
+INFO [2018-10-10 11:28:34] localpsidR: total memory load in MB: 1252
 INFO [2018-10-10 11:28:34]
-INFO [2018-10-10 11:28:34] locapsidR: currently working on data for year 2003
+INFO [2018-10-10 11:28:34] localpsidR: currently working on data for year 2003
 INFO [2018-10-10 11:28:36]
-INFO [2018-10-10 11:28:36] locapsidR: currently working on data for year 2005
+INFO [2018-10-10 11:28:36] localpsidR: currently working on data for year 2005
 INFO [2018-10-10 11:28:37]
-INFO [2018-10-10 11:28:37] locapsidR: currently working on data for year 2007
+INFO [2018-10-10 11:28:37] localpsidR: currently working on data for year 2007
 INFO [2018-10-10 11:28:39] balanced design reduces sample from 97377 to 89571
 INFO [2018-10-10 11:28:39] End of build.panel
 ```
@@ -131,7 +131,7 @@ The package ships variable lists (`inst/psid-lists/famvars.txt` and
 the name of a variable in other waves:
 
 ```r
-cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "locapsidR"))
+cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "localpsidR"))
 getNamesPSID("ER17013", cwf, years = c(2003, 2005, 2007))
 ```
 
@@ -139,7 +139,7 @@ getNamesPSID("ER17013", cwf, years = c(2003, 2005, 2007))
 using the crosswalk:
 
 ```r
-f <- data.table::fread(system.file("psid-lists", "famvars.txt", package = "locapsidR"), na.strings = "")
+f <- data.table::fread(system.file("psid-lists", "famvars.txt", package = "localpsidR"), na.strings = "")
 ext <- extendVarsPSID(f, cwf)
 ext$review  # inspect: every line that is not "added"
 ```
@@ -191,7 +191,7 @@ matters, and make the wave permanent by editing `makeids()` (see
   variable lists to new waves.
 - Added detection of new waves (`detect_waves`, `head_code`,
   `psid_waves_detected.csv`).
-- Renamed the package to locapsidR.
+- Renamed the package to localpsidR.
 
 ## Origin and credits
 
@@ -201,15 +201,15 @@ package is licensed under GPL-3.
 
 ## Citation
 
-`citation("locapsidR")` returns the original psidR reference first and the
-locapsidR reference second:
+`citation("localpsidR")` returns the original psidR reference first and the
+localpsidR reference second:
 
 ```r
-citation("locapsidR")
+citation("localpsidR")
 ```
 
 Please cite the original psidR package. If you also use the adaptations added
-by locapsidR, cite locapsidR as well.
+by localpsidR, cite localpsidR as well.
 
 The original package's reference is kept as it is:
 

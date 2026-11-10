@@ -13,7 +13,7 @@ test_that("clean_sas replaces high and NUL bytes and leaves input untouched", {
   writeBin(raw, p)
   before <- tools::md5sum(p)
 
-  locapsidR:::clean_sas(p, out = q)
+  localpsidR:::clean_sas(p, out = q)
 
   out <- readBin(q, what = "raw", n = file.size(q))
   expect_false(any(as.integer(out) > 127))
@@ -24,13 +24,13 @@ test_that("clean_sas replaces high and NUL bytes and leaves input untouched", {
 test_that("has_input_block detects the INPUT block", {
   p <- tempfile(fileext = ".sas")
   writeLines(c("DATA x;", "INFILE 'd.txt';", "INPUT a 1-2;"), p)
-  expect_true(locapsidR:::has_input_block(p))
+  expect_true(localpsidR:::has_input_block(p))
 })
 
 test_that("has_input_block returns FALSE without an INPUT block", {
   p <- tempfile(fileext = ".sas")
   writeLines(c("DATA x;", "INFILE 'd.txt';", "LABEL a='a';"), p)
-  expect_false(locapsidR:::has_input_block(p))
+  expect_false(localpsidR:::has_input_block(p))
 })
 
 test_that("has_input_block is case-insensitive with a high byte present", {
@@ -41,5 +41,5 @@ test_that("has_input_block is case-insensitive with a high byte present", {
     charToRaw("\ninput a 1-2;\n")
   )
   writeBin(raw, p)
-  expect_true(locapsidR:::has_input_block(p))
+  expect_true(localpsidR:::has_input_block(p))
 })

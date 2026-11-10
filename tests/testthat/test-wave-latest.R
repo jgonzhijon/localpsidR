@@ -1,15 +1,15 @@
 context("latest wave")
 
 test_that("psid_latest_wave and psid_ind_name track makeids", {
-  ids <- locapsidR:::makeids()
+  ids <- localpsidR:::makeids()
 
-  expect_equal(locapsidR:::psid_latest_wave(), max(ids$year))
-  expect_equal(locapsidR:::psid_ind_name(),
-               paste0("IND", locapsidR:::psid_latest_wave(), "ER"))
+  expect_equal(localpsidR:::psid_latest_wave(), max(ids$year))
+  expect_equal(localpsidR:::psid_ind_name(),
+               paste0("IND", localpsidR:::psid_latest_wave(), "ER"))
 })
 
 test_that("the latest wave row of makeids is complete and consistent", {
-  ids <- locapsidR:::makeids()
+  ids <- localpsidR:::makeids()
   ys <- sort(unique(ids$year), decreasing = TRUE)
   latest <- ids[ids$year == ys[1]]
   previous <- ids[ids$year == ys[2]]
@@ -24,7 +24,7 @@ test_that("the latest wave row of makeids is complete and consistent", {
 
 test_that("build.panel builds a panel for the latest wave end to end", {
   n <- 20L
-  w <- locapsidR:::psid_latest_wave()
+  w <- localpsidR:::psid_latest_wave()
   d <- fake_psid_datadir(w, n = n)
 
   out <- build.panel(
@@ -39,5 +39,5 @@ test_that("build.panel builds a panel for the latest wave end to end", {
 })
 
 test_that("2023 is a supported wave (pinned)", {
-  expect_true(2023 %in% locapsidR:::psid_supported_waves())
+  expect_true(2023 %in% localpsidR:::psid_supported_waves())
 })

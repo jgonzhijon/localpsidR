@@ -6,7 +6,7 @@ test_that("fake_psid_datadir creates expected files, each loading as one object"
 
   expect_true(dir.exists(d$dir))
 
-  ind_year <- max(locapsidR:::makeids()$year)
+  ind_year <- max(localpsidR:::makeids()$year)
   expected <- c("FAM1985ER.rda", "FAM1986ER.rda", paste0("IND", ind_year, "ER.rda"))
   expect_true(all(expected %in% list.files(d$dir)))
 
