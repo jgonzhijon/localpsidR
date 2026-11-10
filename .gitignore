@@ -2,3 +2,8 @@
 .Rhistory
 .RData
 .Ruserdata
+*.zip
+*.part
+/psid-input/
+/psid-output/
+/psid-reference/

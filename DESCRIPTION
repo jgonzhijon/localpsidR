@@ -31,8 +31,10 @@ License: GPL-3
 Encoding: UTF-8
 Collate:
     'build.panel.r'
+    'import-psid.r'
     'makeids.r'
     'psidR-package.r'
 Suggests:
-    testthat
+    testthat,
+    zip
 RoxygenNote: 7.3.2
