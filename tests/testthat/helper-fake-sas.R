@@ -4,7 +4,7 @@
 # and the matching SAS import code so tests never touch real PSID microdata.
 # `zip_files()` packs files into a zip using the `zip` package.
 
-write_fixed_width <- function(df, dir, stem) {
+write_fixed_width <- function(df, dir, stem, labels = NULL) {
   if (!dir.exists(dir)) {
     dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   }
@@ -35,6 +35,12 @@ write_fixed_width <- function(df, dir, stem) {
     paste0("  ", names(df), " ", starts, "-", ends),
     ";"
   )
+
+  if (!is.null(labels)) {
+    label_lines <- paste0("      ", labels$var, "    LABEL=\"", labels$label,
+                          "\"    format=f8.")
+    sas <- c(sas, "ATTRIB", label_lines, ";")
+  }
 
   writeLines(sas, file.path(dir, paste0(stem, ".sas")))
 

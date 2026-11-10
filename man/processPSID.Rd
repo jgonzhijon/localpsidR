@@ -47,7 +47,9 @@ Output files use the \code{format} argument; \code{format = "rds"} files
 are not readable by \code{\link{build.panel}} in this version, so use the
 default \code{"rda"} when the files are meant for \code{\link{build.panel}}.
 Raw PSID files stay wherever the user keeps them; this package never
-uploads or transmits them.
+uploads or transmits them. For \code{fam} and \code{ind} jobs it also
+writes \code{psid_waves_detected.csv} (variable names and years only, no
+respondent data) into \code{outputdir} for waves that are not built in.
 }
 \examples{
 \dontrun{

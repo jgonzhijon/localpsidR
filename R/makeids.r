@@ -309,3 +309,146 @@ psid_pick_ind_file <- function(files) {
 
   ind[order(year, is_rda, decreasing = TRUE)[1L]]
 }
+
+
+#' Detect individual-file waves from parsed SAS labels
+#'
+#' Matches the anchored interview, sequence and relation-to-head label
+#' patterns and assembles the `ind.interview` / `ind.seq` / `ind.head`
+#' variable names per wave. Malformed waves are reported in `rejected`.
+#'
+#' @param labels A data.frame with columns `var` and `label`, as returned by
+#'   `psid_parse_sas_labels()`.
+#' @return A list with `waves` (columns `year`, `ind.interview`, `ind.seq`,
+#'   `ind.head`) and `rejected` (columns `year`, `reason`).
+#' @noRd
+psid_detect_ind_waves <- function(labels) {
+  var <- toupper(labels$var)
+  lab <- labels$label
+
+  rel_pat <- paste0("^(RELATIONSHIP TO HEAD|RELATION TO HEAD|",
+                    "RELATION TO REFERENCE PERSON) +[0-9]{2}$")
+  intv <- grepl("^[0-9]{4} INTERVIEW NUMBER$", lab)
+  seqn <- grepl("^SEQUENCE NUMBER +[0-9]{2}$", lab)
+  reln <- grepl(rel_pat, lab)
+
+  iy <- as.integer(sub("^([0-9]{4}) INTERVIEW NUMBER$", "\\1", lab[intv]))
+  iv <- var[intv]
+
+  sy2 <- as.integer(sub("^SEQUENCE NUMBER +([0-9]{2})$", "\\1", lab[seqn]))
+  sv <- var[seqn]
+  sy <- ifelse(sy2 >= 68L, 1900L + sy2, 2000L + sy2)
+
+  ry2 <- as.integer(sub("^.* +([0-9]{2})$", "\\1", lab[reln]))
+  rv <- var[reln]
+  ry <- ifelse(ry2 >= 68L, 1900L + ry2, 2000L + ry2)
+
+  years <- sort(unique(c(iy, sy, ry)))
+
+  vnum <- function(v) {
+    num <- sub("^[A-Z]+", "", v)
+    num[!grepl("^[0-9]+$", num)] <- NA_character_
+    as.integer(num)
+  }
+  vpref <- function(v) sub("[0-9]+$", "", v)
+
+  waves <- list()
+  rej <- list()
+
+  for (y in years) {
+    iv_y <- iv[iy == y]
+    sv_y <- sv[sy == y]
+    rv_y <- rv[ry == y]
+
+    reason <- NULL
+
+    if (length(iv_y) == 0L) {
+      reason <- sprintf("no interview number for %d", y)
+    } else if (length(iv_y) > 1L) {
+      reason <- sprintf("multiple interview numbers for %d", y)
+    } else if (length(rv_y) == 0L) {
+      expected <- vnum(iv_y) + 2L
+      if (any(vpref(rv) == vpref(iv_y) & vnum(rv) == expected, na.rm = TRUE)) {
+        reason <- sprintf("relation year disagrees with interview for %d", y)
+      } else {
+        reason <- sprintf("no relation to head for %d", y)
+      }
+    } else if (length(rv_y) > 1L) {
+      reason <- sprintf("multiple relation to head for %d", y)
+    } else if (y != 1968L && length(sv_y) == 0L) {
+      expected <- vnum(iv_y) + 1L
+      if (any(vpref(sv) == vpref(iv_y) & vnum(sv) == expected, na.rm = TRUE)) {
+        reason <- sprintf("sequence year disagrees with interview for %d", y)
+      } else {
+        reason <- sprintf("no sequence number for %d", y)
+      }
+    } else if (length(sv_y) > 1L) {
+      reason <- sprintf("multiple sequence numbers for %d", y)
+    } else if (!all(grepl("^[A-Z]+[0-9]+$", c(iv_y, rv_y, sv_y)))) {
+      reason <- sprintf("invalid variable name for %d", y)
+    } else if (vpref(iv_y) != vpref(rv_y)) {
+      reason <- sprintf("variable prefixes differ for %d", y)
+    } else if (y != 1968L && vpref(iv_y) != vpref(sv_y)) {
+      reason <- sprintf("variable prefixes differ for %d", y)
+    } else if (y != 1968L && vnum(sv_y) != vnum(iv_y) + 1L) {
+      reason <- sprintf("sequence not interview + 1 for %d", y)
+    } else if (vnum(rv_y) != vnum(iv_y) + 2L) {
+      reason <- sprintf("relation not interview + 2 for %d", y)
+    }
+
+    if (is.null(reason)) {
+      waves[[length(waves) + 1L]] <- data.frame(
+        year = y,
+        ind.interview = iv_y,
+        ind.seq = if (y == 1968L) NA_character_ else sv_y,
+        ind.head = rv_y,
+        stringsAsFactors = FALSE
+      )
+    } else {
+      rej[[length(rej) + 1L]] <- data.frame(year = y, reason = reason,
+                                            stringsAsFactors = FALSE)
+    }
+  }
+
+  waves_df <- if (length(waves)) do.call(rbind, waves) else
+    data.frame(year = integer(), ind.interview = character(),
+               ind.seq = character(), ind.head = character(),
+               stringsAsFactors = FALSE)
+  rej_df <- if (length(rej)) do.call(rbind, rej) else
+    data.frame(year = integer(), reason = character(),
+               stringsAsFactors = FALSE)
+
+  list(waves = waves_df, rejected = rej_df)
+}
+
+#' Detect the family-interview variable from parsed SAS labels
+#'
+#' Matches only the modern `YYYY FAMILY INTERVIEW (ID) NUMBER` label.
+#'
+#' @param labels A data.frame with columns `var` and `label`, as returned by
+#'   `psid_parse_sas_labels()`.
+#' @return A list with `wave` (a one-row data.frame with columns `year` and
+#'   `fam.interview`, or `NULL`) and `reason` (an empty string on success).
+#' @noRd
+psid_detect_fam_wave <- function(labels) {
+  var <- toupper(labels$var)
+  lab <- labels$label
+
+  hit <- grepl("^[0-9]{4} FAMILY INTERVIEW \\(ID\\) NUMBER$", lab)
+  year <- as.integer(sub("^([0-9]{4}) FAMILY INTERVIEW \\(ID\\) NUMBER$",
+                         "\\1", lab[hit]))
+  fam <- var[hit]
+
+  if (length(fam) == 0L) {
+    return(list(wave = NULL, reason = "no family interview variable"))
+  }
+  if (length(fam) > 1L) {
+    return(list(wave = NULL,
+                reason = sprintf("multiple family interview variables: %s",
+                                 paste(sort(unique(year)), collapse = ", "))))
+  }
+
+  list(wave = data.frame(year = year[1], fam.interview = fam[1],
+                         stringsAsFactors = FALSE),
+       reason = "")
+}
