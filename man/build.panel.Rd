@@ -12,7 +12,9 @@ build.panel(
   current.heads.only = FALSE,
   sample = NULL,
   design = "balanced",
-  loglevel = INFO
+  loglevel = INFO,
+  detect_waves = FALSE,
+  head_code = NULL
 )
 }
 \arguments{
@@ -31,6 +33,15 @@ build.panel(
 \item{design}{either character \emph{balanced} or \emph{all} or integer. \emph{balanced} means only individuals who appear in each wave are considered. \emph{All} means all are taken. An integer value stands for minimum consecutive years of participation, i.e. design=3 means present in at least 3 consecutive waves.}
 
 \item{loglevel}{one of INFO, WARN and DEBUG. INFO by default.}
+
+\item{detect_waves}{logical; if TRUE, read psid_waves_detected.csv from
+datadir (written by getPSID() when it imports waves that are not built
+in) and use the detected variable names for those waves. Built-in waves
+always win. Defaults to FALSE.}
+
+\item{head_code}{numeric code of "is the head" for detected waves.
+Defaults to NULL, in which case the code of the latest built-in wave is
+carried over.}
 }
 \value{
 resulting \code{data.table}. the variable \code{pid} is the unique person identifier, constructed from ID1968 and pernum
@@ -40,6 +51,13 @@ Builds a panel data set with id variables \code{pid} (unique person identifier) 
 }
 \details{
 build.panel reads FAM<year>ER and IND<year>ER files (.rda or .RData) from datadir; obtain them with getPSID(). There is no automatic download and no credentials. You need to supply the precise names of psid variables - those variable names vary by year. E.g. \emph{total family income} will have different names in different waves. The function \code{\link{getNamesPSID}} greatly helps collecting names for all waves.
+With \code{detect_waves = TRUE}, build.panel also reads
+\code{psid_waves_detected.csv} from \code{datadir} (written by
+\code{getPSID()} when it imports waves that are not built in); built-in
+waves always win, the detected variable names should be checked against
+the codebook, and \code{head_code} is the numeric code of "is the head"
+for detected waves (by default carried over from the latest built-in
+wave).
 }
 \section{Merging}{
 

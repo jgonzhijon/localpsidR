@@ -3,7 +3,11 @@
 #'
 #' @description this list is taken from http://ideas.repec.org/c/boc/bocode/s457040.html
 #' @details this function hardcodes the PSID variable names of "interview number" from both family and individual file for each wave, as well as "sequence number", "relation to head" and numeric value x of that variable such that "relation to head" == x means the individual is the head. Varies over time.
-makeids <- function(){
+#' @param extra optional data.frame of extra (not yet built-in) waves to
+#'   append to the built-in table, with columns year, ind.interview, ind.seq,
+#'   ind.head, fam.interview and ind.head.num. Defaults to NULL (built-in
+#'   waves only).
+makeids <- function(extra = NULL){
 
 	id.list <- data.table(year=c(1968:1997,seq(1999,2023,by=2)))
 	id.list$ind.interview <- c("ER30001","ER30020","ER30043","ER30067",
@@ -84,6 +88,36 @@ makeids <- function(){
 							   "ER47302" , "ER53002" , "ER60002" , "ER66002" , "ER72002"  ,
 							   "ER78002", "ER82002")
 	id.list$stratum <- rep("ER31996",nrow(id.list))
+
+	if (!is.null(extra)) {
+		if (!is.data.frame(extra)) {
+			stop("extra must be a data.frame", call. = FALSE)
+		}
+		required <- c("year", "ind.interview", "ind.seq", "ind.head",
+		              "fam.interview", "ind.head.num")
+		missing_cols <- setdiff(required, names(extra))
+		if (length(missing_cols) > 0L) {
+			stop("extra is missing required column(s): ",
+			     paste(missing_cols, collapse = ", "), call. = FALSE)
+		}
+		if (anyDuplicated(extra$year)) {
+			stop("extra has duplicated year(s)", call. = FALSE)
+		}
+		extra <- extra[!(extra$year %in% id.list$year), , drop = FALSE]
+		if (nrow(extra) > 0L) {
+			extra <- data.table(
+				year = as.double(extra$year),
+				ind.interview = as.character(extra$ind.interview),
+				ind.seq = as.character(extra$ind.seq),
+				ind.head = as.character(extra$ind.head),
+				fam.interview = as.character(extra$fam.interview),
+				ind.head.num = as.double(extra$ind.head.num),
+				stratum = rep("ER31996", nrow(extra))
+			)
+			id.list <- rbindlist(list(id.list, extra), use.names = TRUE)
+		}
+	}
+
 	setkey(id.list,year)
 	return(id.list)
 }
@@ -259,32 +293,45 @@ testPSID <-function(N=100,N.attr = 0){
 # Supported-wave helpers -------------------------------------------------
 
 #' @noRd
-psid_family_table <- function() {
-  data.frame(
+psid_family_table <- function(extra_years = NULL) {
+  df <- data.frame(
     year = c(1968:1997, seq(1999, 2023, 2)),
     file = c(1056, 1058:1082, 1047:1051, 1040, 1052, 1132, 1139, 1152,
              1156, 1164, 1183, 1187, 1194, 1205, NA_integer_)
   )
+  if (!is.null(extra_years)) {
+    new_years <- setdiff(extra_years, df$year)
+    if (length(new_years) > 0L) {
+      df <- rbind(df, data.frame(year = new_years, file = NA_integer_))
+    }
+    df <- df[order(df$year), , drop = FALSE]
+    rownames(df) <- NULL
+  }
+  df
 }
 
 #' @noRd
-psid_supported_waves <- function() {
-  intersect(psid_family_table()$year, makeids()$year)
+psid_supported_waves <- function(extra_years = NULL) {
+  waves <- intersect(psid_family_table()$year, makeids()$year)
+  if (!is.null(extra_years)) {
+    waves <- sort(unique(c(waves, extra_years)))
+  }
+  waves
 }
 
 #' @noRd
-psid_latest_wave <- function() {
-  max(psid_supported_waves())
+psid_latest_wave <- function(extra_years = NULL) {
+  max(psid_supported_waves(extra_years))
 }
 
 #' @noRd
-psid_ind_name <- function() {
-  paste0("IND", psid_latest_wave(), "ER")
+psid_ind_name <- function(extra_years = NULL) {
+  paste0("IND", psid_latest_wave(extra_years), "ER")
 }
 
 #' @noRd
-check_supported_waves <- function(years) {
-  bad <- setdiff(years, psid_supported_waves())
+check_supported_waves <- function(years, extra_years = NULL) {
+  bad <- setdiff(years, psid_supported_waves(extra_years))
   if (length(bad) > 0L) {
     stop(
       "Your psidR version does not support wave(s): ",
@@ -308,6 +355,134 @@ psid_pick_ind_file <- function(files) {
   is_rda <- endsWith(tolower(ind), ".rda")
 
   ind[order(year, is_rda, decreasing = TRUE)[1L]]
+}
+
+#' Read the detected-waves CSV written by getPSID()
+#'
+#' Parses `psid_waves_detected.csv` in `datadir` into the six-column data.frame
+#' that `makeids(extra = )` accepts. Rows whose year is already built in are
+#' dropped silently; other invalid rows are dropped one by one with a warning
+#' naming only the year and the reason.
+#'
+#' @param datadir Directory holding `psid_waves_detected.csv`.
+#' @param head_code Numeric code for "this person is the head", used as the
+#'   `ind.head.num` of every returned row. When `NULL`, the code of the latest
+#'   built-in wave is carried over.
+#' @return A data.frame with columns `year` (double), `ind.interview`,
+#'   `ind.seq`, `ind.head`, `fam.interview` (character) and `ind.head.num`
+#'   (double), sorted by year. Zero rows when there is nothing valid.
+#' @noRd
+psid_read_detected <- function(datadir, head_code = NULL) {
+  empty <- data.frame(
+    year = double(),
+    ind.interview = character(),
+    ind.seq = character(),
+    ind.head = character(),
+    fam.interview = character(),
+    ind.head.num = double(),
+    stringsAsFactors = FALSE
+  )
+
+  if (!is.null(head_code)) {
+    if (!is.numeric(head_code) || length(head_code) != 1L || !is.finite(head_code)) {
+      stop("head_code must be a single finite number", call. = FALSE)
+    }
+  }
+
+  path <- file.path(datadir, "psid_waves_detected.csv")
+  if (!file.exists(path)) {
+    return(empty)
+  }
+
+  d <- tryCatch(
+    data.table::fread(path, colClasses = "character", na.strings = "",
+                      data.table = FALSE),
+    error = function(e) NULL
+  )
+
+  cols <- c("year", "ind.interview", "ind.seq", "ind.head", "fam.interview")
+  if (is.null(d) || !all(cols %in% names(d))) {
+    futile.logger::flog.warn(
+      "cannot read %s or it lacks the expected columns; ignored",
+      basename(path)
+    )
+    return(empty)
+  }
+
+  d <- d[, cols, drop = FALSE]
+  var_cols <- cols[-1L]
+  for (col in var_cols) {
+    d[[col]] <- toupper(d[[col]])
+  }
+
+  built <- makeids()
+  year_num <- suppressWarnings(as.numeric(d$year))
+  keep <- is.na(year_num) | !(year_num %in% built$year)
+  d <- d[keep, , drop = FALSE]
+  year_num <- year_num[keep]
+
+  reason <- rep("", nrow(d))
+  year_ok <- !is.na(year_num) & year_num == floor(year_num) & year_num > 0
+  reason[!year_ok] <- "not a positive integer"
+
+  for (col in var_cols) {
+    empty_col <- is.na(d[[col]]) | !nzchar(trimws(d[[col]]))
+    idx <- which(reason == "" & empty_col)
+    reason[idx] <- sprintf("empty %s", col)
+  }
+
+  for (col in var_cols) {
+    idx <- which(reason == "" & !grepl("^[A-Za-z]+[0-9]+$", d[[col]]))
+    reason[idx] <- sprintf("invalid variable name in %s", col)
+  }
+
+  clean <- reason == ""
+  if (any(clean)) {
+    dup_years <- names(which(table(d$year[clean]) > 1L))
+    for (y in dup_years) {
+      reason[clean & d$year == y] <- "duplicated year"
+    }
+  }
+
+  clean <- reason == ""
+  if (any(clean)) {
+    for (col in var_cols) {
+      vals <- d[[col]][clean]
+      dup_vals <- vals[duplicated(vals)]
+      in_builtin <- d[[col]] %in% built[[col]]
+      in_dup <- d[[col]] %in% dup_vals
+      clash <- clean & (in_builtin | in_dup)
+      reason[clash] <- sprintf("repeated variable name in %s", col)
+    }
+  }
+
+  drop <- reason != ""
+  for (i in which(drop)) {
+    futile.logger::flog.warn("dropped detected wave year %s: %s",
+                             d$year[i], reason[i])
+  }
+
+  out <- data.frame(
+    year = as.double(year_num[!drop]),
+    ind.interview = d$ind.interview[!drop],
+    ind.seq = d$ind.seq[!drop],
+    ind.head = d$ind.head[!drop],
+    fam.interview = d$fam.interview[!drop],
+    ind.head.num = rep(NA_real_, sum(!drop)),
+    stringsAsFactors = FALSE
+  )
+
+  if (nrow(out) > 0L) {
+    out$ind.head.num <- if (is.null(head_code)) {
+      built$ind.head.num[which.max(built$year)]
+    } else {
+      as.double(head_code)
+    }
+  }
+
+  out <- out[order(out$year), , drop = FALSE]
+  rownames(out) <- NULL
+  out
 }
 
 

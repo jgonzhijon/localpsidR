@@ -307,6 +307,33 @@ fam.vars <- data.table::dcast(ext$vars, year ~ name, value.var = "variable")
 
 Check `ext$review` against the PSID codebooks before using the result, because a variable can change definition between waves even when its crosswalk name changes consistently. The crosswalk can be your own newer `psid.xlsx` — for example one with corrected variable names for waves this package already supports. Waves later than the latest one this package supports also need a package update, because `build.panel()` stops for unsupported waves even when the lists have been extended.
 
+## Building a new wave before a package update
+
+`getPSID()` detects the variable names of waves that are not built in and
+writes them to `psid_waves_detected.csv` (metadata only, no respondent data)
+in the output folder. Import both the IND and the FAM zip of the new wave,
+then build it with `detect_waves = TRUE`:
+
+```r
+getPSID(inputdir = "path/to/downloaded-psid", outputdir = "path/to/psid-output")
+build.panel(datadir = "path/to/psid-output",
+            fam.vars = data.frame(year = <year>, v = "<variable name>"),
+            detect_waves = TRUE, head_code = <head code>)
+```
+
+`datadir` must contain `psid_waves_detected.csv` (in the same folder as the imported files).
+`build.panel()` logs a warning listing the variable names it uses. The head
+code is `head_code` if given, otherwise carried over from the latest built-in
+wave with a warning (`head_code` is ignored unless `detect_waves = TRUE`).
+For each requested year that was detected, `build.panel()` stops if fewer
+than 80% of the nonzero individual interview numbers appear among the family
+interview numbers. Only the modern
+family-interview label form (`<YYYY> FAMILY INTERVIEW (ID) NUMBER`) is
+detected. Detection is a convenience for a first look: verify the detected
+variable names and the head code against the PSID codebook when the result
+matters, and make the wave permanent by editing `makeids()` (see
+ADDING_A_WAVE.md).
+
 ## Origin and credits
 
 This repository is a fork of [psidR](https://github.com/floswald/psidR) by

@@ -9,10 +9,10 @@
 # comes from `makeids()` rather than being hard-coded.
 
 fake_psid_datadir <- function(years, n = 20L, dir = tempfile("psid_fake_"),
-                              ind_year = NULL) {
+                              ind_year = NULL, extra = NULL) {
   stopifnot(is.numeric(years), length(years) >= 1L)
 
-  ids <- psidR:::makeids()
+  ids <- psidR:::makeids(extra)
 
   if (is.null(ind_year)) {
     ind_year <- max(ids$year)
@@ -56,4 +56,29 @@ fake_psid_datadir <- function(years, n = 20L, dir = tempfile("psid_fake_"),
   save(x, file = file.path(dir, paste0("IND", ind_year, "ER.rda")))
 
   list(dir = dir, ind = ind, fam = fam)
+}
+
+# Synthetic six-column data.frame for makeids(extra = ), using obviously fake
+# variable names (never real PSID names, unique across years).
+fake_extra_wave <- function(years, head_num = 10) {
+  years <- as.double(years)
+  data.frame(
+    year = years,
+    ind.interview = sprintf("ERT%05d", years * 10L + 1L),
+    ind.seq = sprintf("ERT%05d", years * 10L + 2L),
+    ind.head = sprintf("ERT%05d", years * 10L + 3L),
+    fam.interview = sprintf("ERT%05d", years * 10L + 4L),
+    ind.head.num = rep(as.double(head_num), length(years)),
+    stringsAsFactors = FALSE
+  )
+}
+
+# Write a psid_waves_detected.csv with the five columns read by
+# psid_read_detected (ind.head.num is not written). Accepts NA in any field.
+write_fake_detected <- function(dir, extra) {
+  data.table::fwrite(
+    extra[, c("year", "ind.interview", "ind.seq", "ind.head", "fam.interview")],
+    file.path(dir, "psid_waves_detected.csv"),
+    na = "", row.names = FALSE, quote = FALSE
+  )
 }

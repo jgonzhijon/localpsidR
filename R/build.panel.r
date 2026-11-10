@@ -5,6 +5,13 @@
 #' @description Builds a panel data set with id variables \code{pid} (unique person identifier) and \code{year} from individual PSID family files and supplemental wealth files.
 #' @details 
 #' build.panel reads FAM<year>ER and IND<year>ER files (.rda or .RData) from datadir; obtain them with getPSID(). There is no automatic download and no credentials. You need to supply the precise names of psid variables - those variable names vary by year. E.g. \emph{total family income} will have different names in different waves. The function \code{\link{getNamesPSID}} greatly helps collecting names for all waves.
+#' With \code{detect_waves = TRUE}, build.panel also reads
+#' \code{psid_waves_detected.csv} from \code{datadir} (written by
+#' \code{getPSID()} when it imports waves that are not built in); built-in
+#' waves always win, the detected variable names should be checked against
+#' the codebook, and \code{head_code} is the numeric code of "is the head"
+#' for detected waves (by default carried over from the latest built-in
+#' wave).
 #' @section Merging:
 #' The variables \code{interview number} in each family file map to 
 #' the \code{interview number} variable of a given year in the individual file. Run \code{example(build.panel)} for a demonstration.  
@@ -20,6 +27,13 @@
 #' @param sample string indicating which sample to select: "SRC" (survey research center), "SEO" (survey for economic opportunity), "immigrant" (immigrant sample), "latino" (Latino family sample). Defaults to NULL, so no subsetting takes place.
 #' @param design either character \emph{balanced} or \emph{all} or integer. \emph{balanced} means only individuals who appear in each wave are considered. \emph{All} means all are taken. An integer value stands for minimum consecutive years of participation, i.e. design=3 means present in at least 3 consecutive waves.
 #' @param loglevel one of INFO, WARN and DEBUG. INFO by default.
+#' @param detect_waves logical; if TRUE, read psid_waves_detected.csv from
+#'   datadir (written by getPSID() when it imports waves that are not built
+#'   in) and use the detected variable names for those waves. Built-in waves
+#'   always win. Defaults to FALSE.
+#' @param head_code numeric code of "is the head" for detected waves.
+#'   Defaults to NULL, in which case the code of the latest built-in wave is
+#'   carried over.
 #' @import SAScii RCurl data.table
 #' @return
 #' resulting \code{data.table}. the variable \code{pid} is the unique person identifier, constructed from ID1968 and pernum
@@ -93,7 +107,7 @@
 #' # #####################################################################
 #' # Please go to https://github.com/floswald/psidR for more example usage
 #' # #####################################################################
-build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,current.heads.only=FALSE,sample=NULL,design="balanced",loglevel=INFO){
+build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,current.heads.only=FALSE,sample=NULL,design="balanced",loglevel=INFO,detect_waves=FALSE,head_code=NULL){
 	
   	flog.threshold(loglevel)
 
@@ -105,7 +119,54 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 
 	stopifnot(is.numeric(fam.vars$year))
 	years <- fam.vars$year
-	check_supported_waves(years)
+
+	if (!is.logical(detect_waves) || length(detect_waves) != 1L ||
+	    is.na(detect_waves)) {
+		stop("detect_waves must be TRUE or FALSE", call. = FALSE)
+	}
+	if (detect_waves) {
+		extra <- psid_read_detected(if (is.null(datadir)) tempdir() else datadir, head_code)
+		if (nrow(extra) == 0L) {
+			extra <- NULL
+		}
+		unsupported <- setdiff(years, psid_supported_waves())
+		nodet <- setdiff(unsupported, extra$year)
+		if (length(nodet) > 0L) {
+			msg <- paste0("detect_waves = TRUE but no valid detected wave was found ",
+			              "in psid_waves_detected.csv for year(s) %s; import the new ",
+			              "zips with getPSID() first")
+			flog.warn(msg, paste(nodet, collapse = ", "))
+		}
+	} else {
+		if (!is.null(head_code)) {
+			flog.warn("head_code is ignored unless detect_waves = TRUE")
+		}
+		extra <- NULL
+	}
+	check_supported_waves(years, extra_years = extra$year)
+
+	if (!is.null(extra)) {
+		for (y in years) {
+			if (y %in% extra$year) {
+				row <- extra[extra$year == y, , drop = FALSE]
+				msg <- paste0("using detected variables for wave %d (not built in; ",
+				              "verify against the codebook): ind.interview=%s, ind.seq=%s, ",
+				              "ind.head=%s, fam.interview=%s")
+				flog.warn(msg, y, row$ind.interview, row$ind.seq, row$ind.head,
+				          row$fam.interview)
+			}
+		}
+		if (any(years %in% extra$year)) {
+			if (is.null(head_code)) {
+				msg <- paste0("head code for detected waves carried over from the ",
+				              "latest built-in wave %d")
+				flog.warn(msg, max(psid_supported_waves()))
+			} else {
+				flog.warn("head code for detected waves given by head_code = %s",
+				          as.character(head_code))
+			}
+		}
+	}
 	flog.debug("years:",years,capture=TRUE)
 
 	# figure out platform
@@ -141,7 +202,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 	wlth.down <- TRUE  # initiate to something
 
 	# all psid family files
-	family <- psid_family_table()
+	family <- psid_family_table(extra_years = extra$year)
 	# family    <- data.frame(year = c( 1968:1997 , seq( 1999 , 2013 , 2 ) ),file = c( 1056 , 1058:1082 , 1047:1051 , 1040 , 1052 , 1132 , 1139 , 1152  , 1156, 1164  ))
 
 	#subset to the years we want
@@ -188,7 +249,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 		if (!ind.present) {
 			parts <- c(parts, paste0("no individual index file matching ",
 				"IND<year>ER.rda/.RData was found (latest expected: ",
-				psid_ind_name(), ")"))
+				psid_ind_name(extra_years = extra$year), ")"))
 		}
 		stop(
 			paste0("Missing PSID files in '", datadir, "': ",
@@ -240,7 +301,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 	datas <- vector("list",length(years))
 
 	# make an index of interview numbers for each year
-	ids <- makeids()
+	ids <- makeids(extra)
 
 	# make sure the individual file has the id columns needed for the requested years
 	req <- ids[list(years)]
@@ -251,7 +312,7 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 		details <- paste0(need.cols[bad], " (year ", need.years[bad], ")", collapse = ", ")
 		stop("The individual file is missing columns required for the requested years: ",
 			details,
-			". A newer individual file (", psid_ind_name(), ") is needed.",
+			". A newer individual file (", psid_ind_name(extra_years = extra$year), ") is needed.",
 			call. = FALSE)
 	}
 
@@ -492,6 +553,24 @@ build.panel <- function(datadir=NULL,fam.vars,ind.vars=NULL,heads.only=FALSE,cur
 			setkey(tmp,interview)
 		}
 		
+		if (!is.null(extra) && (years[iy] %in% extra$year)) {
+			iv <- yind$interview
+			iv <- iv[!is.na(iv) & iv != 0]
+			if (length(iv) > 0L) {
+				share <- mean(iv %in% tmp$interview)
+				if (share < 0.8) {
+					pct <- sprintf("%.0f%%", share * 100)
+					fmt <- paste0("detected wave %d looks wrong: only %s of the nonzero ",
+					              "individual interview numbers appear among the family ",
+					              "interview numbers (%s vs %s). The detected variable names ",
+					              "are probably not the right ones; check them against the ",
+					              "codebook.")
+					stop(sprintf(fmt, years[iy], pct, curr$ind.interview,
+					             curr$fam.interview), call. = FALSE)
+				}
+			}
+		}
+
 		# merge family and yind
 		m <- copy(tmp[yind])
 		m[,year := years[iy] ]

@@ -4,7 +4,13 @@
 \alias{makeids}
 \title{ID list for mergeing PSID}
 \usage{
-makeids()
+makeids(extra = NULL)
+}
+\arguments{
+\item{extra}{optional data.frame of extra (not yet built-in) waves to
+append to the built-in table, with columns year, ind.interview, ind.seq,
+ind.head, fam.interview and ind.head.num. Defaults to NULL (built-in
+waves only).}
 }
 \description{
 this list is taken from http://ideas.repec.org/c/boc/bocode/s457040.html

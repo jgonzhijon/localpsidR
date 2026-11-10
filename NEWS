@@ -9,6 +9,7 @@
 * build.panel() uses the newest IND<year>ER file when several are present, and gives a clear error when the individual file lacks the columns of the requested years or when a wave is not supported.
 * getNamesPSID() now warns about years without a crosswalk column.
 * Added exported extendVarsPSID() and the script data-raw/update-varlists.R to extend the variable lists to new waves.
+* build.panel() has new arguments detect_waves (default FALSE) and head_code; getPSID() now writes psid_waves_detected.csv (metadata only) with the variable names it detects for waves that are not built in, and with detect_waves = TRUE build.panel() can build such a wave using those names, with a warning listing them. The built-in makeids() always wins.
 
 
 *********************
