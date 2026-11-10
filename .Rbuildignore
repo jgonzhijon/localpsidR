@@ -16,3 +16,4 @@ _pkgdown.yml
 ^\.clinerules$
 ^psid-reference$
 ^data-raw$
+^ADDING_A_WAVE\.md$

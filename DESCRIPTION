@@ -19,7 +19,8 @@ Description: Makes it easy to build panel data in wide format from Panel Survey
     implemented ("SRC", "SEO", "immigrant" and "latino" samples). More information about 
     the PSID can be obtained at <https://simba.isr.umich.edu/data/data.aspx>.
 Depends: R (>= 3.5.0)
-URL: https://github.com/floswald/psidR
+URL: https://github.com/jgonzhijon/psidR
+BugReports: https://github.com/jgonzhijon/psidR/issues
 Imports:
     data.table,
     RCurl,

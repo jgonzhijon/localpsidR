@@ -4,9 +4,9 @@
 # psidR: make building panel data from PSID easy
 
 
-| Build  | DOI  | Docs  |
-|---|---|---|
-[![R-CMD-check](https://github.com/floswald/psidR/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/floswald/psidR/actions/workflows/check-standard.yaml) | [![DOI](https://zenodo.org/badge/9247059.svg)](https://zenodo.org/badge/latestdoi/9247059) | [![DOCS](https://img.shields.io/badge/docs-Documentation-blue)](https://floswald.github.io/psidR)|
+| Build  | DOI  |
+|---|---|
+[![R-CMD-check](https://github.com/jgonzhijon/psidR/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/jgonzhijon/psidR/actions/workflows/check-standard.yaml) | [![DOI](https://zenodo.org/badge/9247059.svg)](https://zenodo.org/badge/latestdoi/9247059)|
 
 
 This R package provides a function to easily build panel data from PSID raw data.
@@ -26,7 +26,7 @@ Alternatively to get the up-to-date version from this repository,
 
 ```r
 install.packages('devtools')
-install_github("psidR",username="floswald")
+remotes::install_github("jgonzhijon/psidR")
 ```
 
 ### PSID
@@ -306,6 +306,15 @@ fam.vars <- data.table::dcast(ext$vars, year ~ name, value.var = "variable")
 ```
 
 Check `ext$review` against the PSID codebooks before using the result, because a variable can change definition between waves even when its crosswalk name changes consistently. The crosswalk can be your own newer `psid.xlsx` — for example one with corrected variable names for waves this package already supports. Waves later than the latest one this package supports also need a package update, because `build.panel()` stops for unsupported waves even when the lists have been extended.
+
+## Origin and credits
+
+This repository is a fork of [psidR](https://github.com/floswald/psidR) by
+Florian Oswald. The original authors keep full credit for the package. This
+fork adds PSID 2023 support, a wave framework, the import of locally
+downloaded PSID files, and the removal of the interactive download. If you
+use this package, please also cite the original; the citation block below
+stays as it is.
 
 ## Citation
 

@@ -4,6 +4,11 @@
 
 * Fixed deprecated data.table syntax: with=FALSE combined with := raises an error since data.table 1.15.0 (a deprecated warning before), so build.panel() failed whenever a requested family variable was NA for a year.
 * Added processPSID(), getFamilyPSID(), getIndPSID() and getPSID() for importing locally downloaded PSID files.
+* Added support for the PSID 2023 wave: a new row in the wave tables, the crosswalk psid.xlsx updated, and famvars.txt/indvars.txt extended to 2019, 2021 and 2023.
+* build.panel() no longer downloads data nor asks for PSID credentials; when files are missing it stops with a message that points to getPSID().
+* build.panel() uses the newest IND<year>ER file when several are present, and gives a clear error when the individual file lacks the columns of the requested years or when a wave is not supported.
+* getNamesPSID() now warns about years without a crosswalk column.
+* Added exported extendVarsPSID() and the script data-raw/update-varlists.R to extend the variable lists to new waves.
 
 
 *********************

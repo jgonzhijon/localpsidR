@@ -13,7 +13,8 @@ data.frame.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/floswald/psidR}
+  \item \url{https://github.com/jgonzhijon/psidR}
+  \item Report bugs at \url{https://github.com/jgonzhijon/psidR/issues}
 }
 
 }
