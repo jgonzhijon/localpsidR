@@ -2,6 +2,7 @@
 
 export(build.panel)
 export(build.psid)
+export(extendVarsPSID)
 export(getFamilyPSID)
 export(getIndPSID)
 export(getNamesPSID)

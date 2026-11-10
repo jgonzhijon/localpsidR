@@ -292,6 +292,21 @@ build.panel(datadir = "path/to/psid-output", ...)
 
 PSID data must not be shared or committed.
 
+## Extending the variable lists to a new wave
+
+You can extend the shipped variable lists yourself with the PSID crosswalk:
+
+```r
+f <- data.table::fread(system.file("psid-lists", "famvars.txt", package = "psidR"), na.strings = "")
+cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "psidR"))
+ext <- extendVarsPSID(f, cwf)
+ext$review                      # inspect: every line that is not "added"
+fam.vars <- data.table::dcast(ext$vars, year ~ name, value.var = "variable")
+# then: build.panel(datadir = ..., fam.vars = fam.vars, ...)
+```
+
+Check `ext$review` against the PSID codebooks before using the result, because a variable can change definition between waves even when its crosswalk name changes consistently. The crosswalk can be your own newer `psid.xlsx` — for example one with corrected variable names for waves this package already supports. Waves later than the latest one this package supports also need a package update, because `build.panel()` stops for unsupported waves even when the lists have been extended.
+
 ## Citation
 
 If you use `psidR` in your work, please consider citing it. You could just do 

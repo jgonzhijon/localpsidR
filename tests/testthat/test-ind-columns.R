@@ -9,11 +9,11 @@ test_that("build.panel errors when the index lacks the requested year columns", 
   drop_cols <- c(row1986$ind.interview, row1986$ind.seq, row1986$ind.head)
 
   env <- new.env()
-  load(file.path(d$dir, "IND2021ER.rda"), envir = env)
+  load(file.path(d$dir, paste0(psidR:::psid_ind_name(), ".rda")), envir = env)
   ind <- get(ls(env), env)
   ind <- ind[, !(toupper(names(ind)) %in% drop_cols)]
   x <- ind
-  save(x, file = file.path(d$dir, "IND2021ER.rda"))
+  save(x, file = file.path(d$dir, paste0(psidR:::psid_ind_name(), ".rda")))
 
   fam.vars <- data.frame(year = c(1985, 1986), v = c("FAMVAR1", "FAMVAR1"))
 

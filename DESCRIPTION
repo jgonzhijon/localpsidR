@@ -33,6 +33,7 @@ Collate:
     'build.panel.r'
     'import-psid.r'
     'makeids.r'
+    'varlists.r'
     'psidR-package.r'
 Suggests:
     testthat,
