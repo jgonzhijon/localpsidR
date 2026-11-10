@@ -302,6 +302,22 @@ example(build.panel)
 The PSID has a wealth of add-on datasets. Once you have a panel those are easy to merge on. The panel will have a variable `interview`, which is the identifier in the supplemental dataset. 
 
 
+## Using locally downloaded PSID files
+
+Download the raw data zips from the [PSID Data Center](http://simba.isr.umich.edu/default.aspx) (a free PSID account is required), put them in one folder, and import them with `getPSID()`:
+
+```r
+getPSID("path/to/downloaded-psid", "path/to/psid-output")
+```
+
+Then build the panel as usual:
+
+```r
+build.panel(datadir = "path/to/psid-output", ...)
+```
+
+PSID data must not be shared or committed.
+
 ## Citation
 
 If you use `psidR` in your work, please consider citing it. You could just do 
