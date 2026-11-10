@@ -253,3 +253,58 @@ testPSID <-function(N=100,N.attr = 0){
 
     return(list(famvars1985=fam85,famvars1986=fam86,IND2019ER=IND2009ER))
 }
+
+
+# Supported-wave helpers -------------------------------------------------
+
+#' @noRd
+psid_family_table <- function() {
+  data.frame(
+    year = c(1968:1997, seq(1999, 2021, 2)),
+    file = c(1056, 1058:1082, 1047:1051, 1040, 1052, 1132, 1139, 1152,
+             1156, 1164, 1183, 1187, 1194, 1205)
+  )
+}
+
+#' @noRd
+psid_supported_waves <- function() {
+  intersect(psid_family_table()$year, makeids()$year)
+}
+
+#' @noRd
+psid_latest_wave <- function() {
+  max(psid_supported_waves())
+}
+
+#' @noRd
+psid_ind_name <- function() {
+  paste0("IND", psid_latest_wave(), "ER")
+}
+
+#' @noRd
+check_supported_waves <- function(years) {
+  bad <- setdiff(years, psid_supported_waves())
+  if (length(bad) > 0L) {
+    stop(
+      "Your psidR version does not support wave(s): ",
+      paste(bad, collapse = ", "),
+      ". Install a newer psidR (e.g. ",
+      "remotes::install_github('jgonzhijon/psidR')) or remove those years."
+    )
+  }
+  invisible(NULL)
+}
+
+#' @noRd
+psid_pick_ind_file <- function(files) {
+  keep <- grepl("^IND[0-9]{4}ER[.](rda|RData)$", files, ignore.case = TRUE)
+  ind <- files[keep]
+  if (length(ind) == 0L) {
+    return(character(0))
+  }
+
+  year <- as.integer(substr(ind, 4L, 7L))
+  is_rda <- endsWith(tolower(ind), ".rda")
+
+  ind[order(year, is_rda, decreasing = TRUE)[1L]]
+}

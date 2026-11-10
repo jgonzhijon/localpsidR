@@ -13,7 +13,8 @@ getNamesPSID(aname, cwf, years = NULL, file = NULL)
 (the psid.xlsx file).}
 
 \item{years}{A vector of years. If NULL, all years in which that
-variable existed are returned}
+variable existed are returned. Years with no crosswalk column
+are dropped with a warning.}
 
 \item{file}{optional file name to write csv}
 }

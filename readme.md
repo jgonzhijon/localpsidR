@@ -77,21 +77,7 @@ Example usage:
 > library(psidR)
 
 > build.psid(datadir = "~/data/PSID", small = TRUE)  # directory `datadir` must exist!
-INFO [2021-07-13 10:34:26] Will download missing datasets now
-INFO [2021-07-13 10:34:26] will download family files: 2013, 2015
-INFO [2021-07-13 10:34:26] will download latest individual index: IND2019ER
-This can take several hours/days to download.
- want to go ahead? give me 'yes' or 'no'.yes
-please enter your PSID username: *****
-please enter your PSID password: *****
-INFO [2021-07-13 10:34:41] downloading file ~/data/PSID/FAM2013ER
-INFO [2021-07-13 10:34:56] now reading and processing SAS file ~/data/PSID/FAM2013ER into R
-INFO [2021-07-13 10:40:06] downloading file ~/data/PSID/FAM2015ER          
-INFO [2021-07-13 10:40:22] now reading and processing SAS file ~/data/PSID/FAM2015ER into R
-INFO [2021-07-13 10:45:34] downloading file ~/data/PSID/IND2019ER          
-INFO [2021-07-13 10:46:39] now reading and processing SAS file ~/data/PSID/IND2019ER into R
-INFO [2021-07-13 11:15:04] finished downloading files to ~/data/PSID/       
-INFO [2021-07-13 11:15:04] continuing now to build the dataset
+# (obtain the files locally first - see "Using locally downloaded PSID files" below)
 INFO [2021-07-13 11:15:04] psidR: Loading Family data from .rda files
 INFO [2021-07-13 11:15:12] psidR: loaded individual file: ~/data/PSID/IND2019ER.rda
 INFO [2021-07-13 11:15:12] psidR: total memory load in MB: 1538
@@ -238,19 +224,7 @@ medium.test.noind()
 
 # example output:
 
-INFO [2018-10-10 10:58:23] Will download missing datasets now
-INFO [2018-10-10 10:58:23] will download family files: 2003, 2005, 2007
-This can take several hours/days to download.
- want to go ahead? give me 'yes' or 'no'.yes
-please enter your PSID username: *******
-please enter your PSID password: *******
-INFO [2018-10-10 10:58:46] downloading file ~/psid/FAM2003ER
-INFO [2018-10-10 10:58:50] now reading and processing SAS file ~/psid/FAM2003ER into R
-INFO [2018-10-10 11:07:02] downloading file ~/psid/FAM2005ER               
-INFO [2018-10-10 11:07:05] now reading and processing SAS file ~/psid/FAM2005ER into R
-INFO [2018-10-10 11:14:44] downloading file ~/psid/FAM2007ER               
-INFO [2018-10-10 11:14:48] now reading and processing SAS file ~/psid/FAM2007ER into R
-INFO [2018-10-10 11:28:25] finished downloading files to ~/psid/           
+# (download is no longer part of build.panel - see "Using locally downloaded PSID files" below)
 INFO [2018-10-10 11:28:25] continuing now to build the dataset
 INFO [2018-10-10 11:28:25] psidR: Loading Family data from .rda files
 INFO [2018-10-10 11:28:34] psidR: loaded individual file: ~/psid/IND2015ER.rda

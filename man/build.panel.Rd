@@ -16,7 +16,7 @@ build.panel(
 )
 }
 \arguments{
-\item{datadir}{either \code{NULL}, in which case saves to tmpdir or path to directory containing family files ("FAMyyyy.RData") and individual file ("IND2009ER.RData").}
+\item{datadir}{path to a directory containing family files ("FAM<year>ER.rda" or "FAM<year>ER.RData") and the individual index file ("IND<year>ER.rda" or "IND<year>ER.RData"). If \code{NULL}, \code{tempdir()} is used, which is empty unless files were placed there.}
 
 \item{fam.vars}{data.frame of variable to retrieve from family files. Can contain see example for required format.}
 
@@ -39,7 +39,7 @@ resulting \code{data.table}. the variable \code{pid} is the unique person identi
 Builds a panel data set with id variables \code{pid} (unique person identifier) and \code{year} from individual PSID family files and supplemental wealth files.
 }
 \details{
-There are several supported approches. Approach one downloads stata data, uses stata to build each wave, then puts it together with `psidR`. The second (recommended) approach downloads all data directly from the psid servers (no Stata needed). For this approach you need to supply the precise names of psid variables - those variable names vary by year. E.g. \emph{total family income} will have different names in different waves. The function \code{\link{getNamesPSID}} greatly helps collecting names for all waves.
+build.panel reads FAM<year>ER and IND<year>ER files (.rda or .RData) from datadir; obtain them with getPSID(). There is no automatic download and no credentials. You need to supply the precise names of psid variables - those variable names vary by year. E.g. \emph{total family income} will have different names in different waves. The function \code{\link{getNamesPSID}} greatly helps collecting names for all waves.
 }
 \section{Merging}{
 
