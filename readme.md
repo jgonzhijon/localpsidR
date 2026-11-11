@@ -1,7 +1,7 @@
 # localpsidR
 
-localpsidR builds wide-format panel data sets from Panel Study of Income
-Dynamics (PSID) raw data. It is a fork of
+localpsidR builds long-format panel data sets (one row per person and
+wave) from Panel Study of Income Dynamics (PSID) raw data. It is a fork of
 [psidR](https://github.com/floswald/psidR) by Florian Oswald, and the
 original authors keep full credit for the package.
 
@@ -56,9 +56,9 @@ into the output folder.
 ### Building the panel
 
 `build.panel()` reads the `FAM<year>ER` and `IND<year>ER` files from a data
-directory and returns a wide-format `data.table` with a `pid` column (the
-person identifier, constructed from `ID1968` and `pernum`) and a `year` column,
-plus the requested variables.
+directory and returns a long-format `data.table` (one row per person and wave)
+with a `pid` column (the person identifier, constructed from `ID1968` and
+`pernum`) and a `year` column, plus the requested variables.
 
 ```r
 build.panel(datadir = "path/to/psid-output",
@@ -123,6 +123,66 @@ INFO [2018-10-10 11:28:37] localpsidR: currently working on data for year 2007
 INFO [2018-10-10 11:28:39] balanced design reduces sample from 97377 to 89571
 INFO [2018-10-10 11:28:39] End of build.panel
 ```
+
+### Long format: which rows to keep
+
+`build.panel()` returns the panel in long format: one row per person and wave.
+
+The `sequence` column describes the status of the person at the interview of
+that wave (PSID individual codebook, verified on real data for waves 2011 to
+2023): 1 to 20, in the family at the time of the interview; 51 to 59, in an
+institution; 71 to 80, moved out of the family and established an own household
+since the previous wave; 81 to 89, died since the previous wave; 0, born or
+moved in after the interview. Persons with `sequence` equal to 0 carry the
+family interview number of that wave but have `relation.head` equal to 0 and no
+individual information.
+
+Which rows to keep. Members of the family at the time of the interview:
+`sequence` from 1 to 20. Current heads (reference persons): `relation.head`
+equal to 10 together with `sequence` equal to 1; code 10 alone also includes
+heads of the previous wave who died, are in an institution or moved out.
+Spouses or partners: `relation.head` equal to 20 or 22 among the members. On
+real data for waves 2011 to 2023, all member rows (`sequence` 1 to 20) with
+these codes have `sequence` 2.
+
+Family-file variables are repeated on every row of the family. For analyses at
+the family level keep one row per family, that is the head (code 10 and
+sequence 1); otherwise a family is counted once per member.
+
+For the waves 2011 to 2023, the number of rows with sequence 1 to 20 per wave
+and the number of heads with sequence 1 per wave equal the figures in the PSID
+individual codebook (number of persons in the family and number of families
+interviewed). For earlier waves the user should check the codebook.
+
+```r
+d <- build.panel(datadir = "path/to/psid-output",
+                 fam.vars = fam.vars,
+                 ind.vars = ind.vars,
+                 heads.only = FALSE,
+                 current.heads.only = FALSE,
+                 design = "all")
+
+# keep family members
+d[d$sequence >= 1 & d$sequence <= 20, ]
+
+# keep current heads
+d[d$relation.head == 10 & d$sequence == 1, ]
+
+# keep spouses or partners
+d[d$sequence >= 1 & d$sequence <= 20 & d$relation.head %in% c(20, 22), ]
+
+# keep heads and spouses together
+d[d$sequence >= 1 & d$sequence <= 20 &
+    (d$relation.head == 10 & d$sequence == 1 |
+       d$relation.head %in% c(20, 22)), ]
+```
+
+`heads.only = TRUE` keeps heads only (`relation.head` equal to the head code
+and `sequence` 1 to 20; in 1968, which has no sequence number, the head code
+alone). `current.heads.only = TRUE` keeps current heads only (`relation.head`
+equal to the head code and `sequence` 1; in 1968, the head code alone). Neither
+keeps spouses or partners, so keeping heads and spouses together requires both
+arguments to be `FALSE` and the filter above.
 
 ### Variable lists and the crosswalk
 
