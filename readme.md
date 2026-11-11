@@ -52,7 +52,7 @@ pairs.
 
 `fam.vars` and `ind.vars` are data.frames with an integer `year` column and one
 column per variable. Each cell holds the PSID variable name for that wave, and
-the column name becomes the variable name in the output. `ind.vars` holds
+the column name becomes the variable name in the output. Do not use column names that contain `year` or `variable` (for example `birth_year` or `my_variable`): `build.panel()` stops with an error. `ind.vars` holds
 individual-file variables such as survey weights and must not include the
 identifier variables `ER30001` and `ER30002`. The format is:
 
@@ -95,13 +95,19 @@ cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "loc
 getNamesPSID("ER17013", cwf, years = c(2003, 2005, 2007))
 ```
 
-`getNamesPSID()` returns the year as text such as `"Y2003"`; convert it to build `fam.vars`, or build both data.frames by hand:
+To build `fam.vars` from one name per variable, look the name up with `getNamesPSID()`. It returns the year as text such as `"Y2003"`, and `years` must be given in ascending order (otherwise the names are paired with the wrong years):
 
 ```r
-nm <- getNamesPSID("<variable name>", cwf, years = c(2003, 2005, 2007))
-nm$year <- as.integer(sub("^Y", "", nm$year))
-fam.vars <- data.frame(year = nm$year, v = nm$variable)
+yrs <- c(2019, 2021, 2023)
+get_names <- function(x) getNamesPSID(x, cwf, years = yrs)$variable
+fam.vars <- data.frame(year   = yrs,
+                       faminc = get_names("ER71426"),
+                       hours  = get_names("ER71233"))
+```
 
+Or write the tables by hand and build the panel:
+
+```r
 fam.vars <- data.frame(year = c(1968, 1969), faminc = c("V81", "V529"), hours = c("V47", "V465"))
 ind.vars <- data.frame(year = c(1968, 1969), age = c("ER30004", "ER30023"), weight = c("ER30019", "ER30042"))
 build.panel(datadir = "path/to/psid-output", fam.vars = fam.vars, ind.vars = ind.vars,
@@ -110,8 +116,7 @@ build.panel(datadir = "path/to/psid-output", fam.vars = fam.vars, ind.vars = ind
 
 The result always contains `ID1968`, `pernum`, `interview`, `sequence`, `relation.head`,
 `pid` and `year`, plus one column per requested variable. The order of the columns of
-`fam.vars` matters: `build.panel()` drops the rows whose first non-`NA` family variable is
-`NA` (families that did not respond), so the first family column should exist in every requested wave.
+`fam.vars` matters: in each wave `build.panel()` takes the first family variable that has a name in that wave and drops the rows where it is `NA` (families that did not respond). Put first a variable that is filled for every responding family in every wave, such as the number of people in the family unit.
 
 ### Building the panel
 
@@ -139,6 +144,8 @@ equal to the head code and `sequence` 1; in 1968, the head code alone).
 `"balanced"` keeps individuals present in every requested wave, `"all"` keeps
 everyone, and an integer keeps individuals present in at least that many
 consecutive waves.
+
+For example, heads of the SRC sample only:
 
 ```r
 build.panel(datadir = "~/psid", fam.vars = f, ind.vars = i,
@@ -196,8 +203,7 @@ d[d$sequence >= 1 & d$sequence <= 20 &
        d$relation.head %in% c(20, 22)), ]
 ```
 
-Neither keeps spouses or partners, so keeping heads and spouses together
-requires both arguments to be `FALSE` and the filter above.
+`heads.only` and `current.heads.only` keep heads only (see "Building the panel"). To keep heads and spouses together, set both to `FALSE` and use the filter above.
 
 ### Variable lists and the crosswalk
 
