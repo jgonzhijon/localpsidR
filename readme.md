@@ -22,20 +22,15 @@ Data Center, under "Packaged Data" > "Main and Supplemental Studies"
 (https://simba.isr.umich.edu/Zips/ZipMain.aspx), where the Family Files and the
 Cross-year Individual file are listed. Access requires registering with the
 PSID and having authorization to download the files; the package never handles
-credentials.
-
-The package needs the Cross-year Individual file and the Family File of every
-survey year requested in the panel. `getPSID()` recognises them by their names,
-which begin with `fam` for the Family Files and `ind` for the Cross-year
-Individual file, each followed by the survey year, and it writes one `.rda`
-file per input named `FAM<year>ER.rda` and `IND<year>ER.rda` (or `.rds` with
-`format = "rds"`). For a wave built with `detect_waves = TRUE`, both the new
-Cross-year Individual file and the new Family File must be imported.
-
-The files are imported once with `getPSID()`, and `build.panel()` reads the
-`.rda` files it writes.
+credentials. The package needs the Cross-year Individual file and the Family
+File of every survey year requested in the panel.
 
 ## Workflow
+
+1. Import the PSID files with `getPSID()`.
+2. Choose the variables (`fam.vars` and `ind.vars`).
+3. Build the panel with `build.panel()`.
+4. Keep the rows you need (the panel is in long format).
 
 ### Import
 
@@ -49,22 +44,11 @@ getPSID("path/to/downloaded-psid", "path/to/psid-output")
 `FAM<year>ER.rda` and `IND<year>ER.rda` in the output folder. `getFamilyPSID()`
 and `getIndPSID()` import a single prefix, and `processPSID()` is the
 underlying function, which also accepts folders or loose `.txt` and `.sas`
-pairs. When `getPSID()` imports a wave that is not built in, it writes
-`psid_waves_detected.csv` (variable names and years only, no respondent data)
-into the output folder.
+pairs.
 
-### Building the panel
+### Choosing the variables
 
-`build.panel()` reads the `FAM<year>ER` and `IND<year>ER` files from a data
-directory and returns a long-format `data.table` (one row per person and wave)
-with a `pid` column (the person identifier, constructed from `ID1968` and
-`pernum`) and a `year` column, plus the requested variables.
-
-```r
-build.panel(datadir = "path/to/psid-output",
-            fam.vars = fam.vars,
-            ind.vars = ind.vars)
-```
+`fam.vars` takes Family File variables ("PSID Family-level") and `ind.vars` Cross-year Individual variables ("PSID Individual-level").
 
 `fam.vars` and `ind.vars` are data.frames with an integer `year` column and one
 column per variable. Each cell holds the PSID variable name for that wave, and
@@ -92,41 +76,76 @@ identifier variables `ER30001` and `ER30002`. The format is:
 6: 1973              V3099 <NA>    V3114  V3256 V3027  V3021 ...
 ```
 
+A cell that is `NA` means the variable does not exist in that wave; the returned column
+is `NA` for that wave. `ind.vars` is optional. Find the names in the PSID Data Center
+Variable Search (https://simba.isr.umich.edu/DC/s.aspx), which searches name, label, question
+and explanation text and can be filtered by data type and year, and in the PSID codebooks.
+
+`build.panel()` uses exactly the names given; the same concept has a different
+name in each wave (total family income is V81 in 1968 and V529 in 1969). The
+crosswalk `psid.xlsx` lists, for each variable, its name in every wave, and
+`getNamesPSID()` reads it: given the name in any wave, including a wave you do
+not request, it returns the names in the others. It gives names, not
+definitions; check the codebook for changes of definition between waves. A
+variable with the same name in every wave (for example ER32000, sex of the
+individual) is repeated in every row.
+
+```r
+cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "localpsidR"))
+getNamesPSID("ER17013", cwf, years = c(2003, 2005, 2007))
+```
+
+`getNamesPSID()` returns the year as text such as `"Y2003"`; convert it to build `fam.vars`, or build both data.frames by hand:
+
+```r
+nm <- getNamesPSID("<variable name>", cwf, years = c(2003, 2005, 2007))
+nm$year <- as.integer(sub("^Y", "", nm$year))
+fam.vars <- data.frame(year = nm$year, v = nm$variable)
+
+fam.vars <- data.frame(year = c(1968, 1969), faminc = c("V81", "V529"), hours = c("V47", "V465"))
+ind.vars <- data.frame(year = c(1968, 1969), age = c("ER30004", "ER30023"), weight = c("ER30019", "ER30042"))
+build.panel(datadir = "path/to/psid-output", fam.vars = fam.vars, ind.vars = ind.vars,
+            design = "all")
+```
+
+The result always contains `ID1968`, `pernum`, `interview`, `sequence`, `relation.head`,
+`pid` and `year`, plus one column per requested variable. The order of the columns of
+`fam.vars` matters: `build.panel()` drops the rows whose first non-`NA` family variable is
+`NA` (families that did not respond), so the first family column should exist in every requested wave.
+
+### Building the panel
+
+`build.panel()` reads the `FAM<year>ER` and `IND<year>ER` files from a data
+directory and returns a long-format `data.table` (one row per person and wave)
+with a `pid` column (the person identifier, constructed from `ID1968` and
+`pernum`) and a `year` column, plus the requested variables.
+
+```r
+build.panel(datadir = "path/to/psid-output",
+            fam.vars = fam.vars,
+            ind.vars = ind.vars)
+```
+
 The merge matches the interview number of each family file to the interview
 number of the same year in the individual file. `fam.vars` supplies the
 substantive variables and `ind.vars` the person-level variables.
 
-`heads.only = TRUE` keeps household heads only; `current.heads.only = TRUE`
-keeps current heads only and distinguishes movers-out heads. `sample` selects a
-sample (`"SRC"`, `"SEO"`, `"immigrant"` or `"latino"`; `NULL` does no
-subsetting). `design` controls which individuals are kept: `"balanced"` keeps
-individuals present in every requested wave, `"all"` keeps everyone, and an
-integer keeps individuals present in at least that many consecutive waves.
-
-An example run and its output:
+`heads.only = TRUE` keeps heads only (`relation.head` equal to the head code
+and `sequence` 1 to 20; in 1968, which has no sequence number, the head code
+alone). `current.heads.only = TRUE` keeps current heads only (`relation.head`
+equal to the head code and `sequence` 1; in 1968, the head code alone).
+`sample` selects a sample (`"SRC"`, `"SEO"`, `"immigrant"` or `"latino"`;
+`NULL` does no subsetting). `design` controls which individuals are kept:
+`"balanced"` keeps individuals present in every requested wave, `"all"` keeps
+everyone, and an integer keeps individuals present in at least that many
+consecutive waves.
 
 ```r
 build.panel(datadir = "~/psid", fam.vars = f, ind.vars = i,
             heads.only = TRUE, sample = "SRC", design = "all")
 ```
 
-```text
-INFO [2018-10-10 11:28:25] localpsidR: Loading Family data from .rda files
-INFO [2018-10-10 11:28:34] localpsidR: loaded individual file: ~/psid/IND2015ER.rda
-INFO [2018-10-10 11:28:34] localpsidR: total memory load in MB: 1252
-INFO [2018-10-10 11:28:34]
-INFO [2018-10-10 11:28:34] localpsidR: currently working on data for year 2003
-INFO [2018-10-10 11:28:36]
-INFO [2018-10-10 11:28:36] localpsidR: currently working on data for year 2005
-INFO [2018-10-10 11:28:37]
-INFO [2018-10-10 11:28:37] localpsidR: currently working on data for year 2007
-INFO [2018-10-10 11:28:39] balanced design reduces sample from 97377 to 89571
-INFO [2018-10-10 11:28:39] End of build.panel
-```
-
 ### Long format: which rows to keep
-
-`build.panel()` returns the panel in long format: one row per person and wave.
 
 The `sequence` column describes the status of the person at the interview of
 that wave (PSID individual codebook, verified on real data for waves 2011 to
@@ -177,23 +196,13 @@ d[d$sequence >= 1 & d$sequence <= 20 &
        d$relation.head %in% c(20, 22)), ]
 ```
 
-`heads.only = TRUE` keeps heads only (`relation.head` equal to the head code
-and `sequence` 1 to 20; in 1968, which has no sequence number, the head code
-alone). `current.heads.only = TRUE` keeps current heads only (`relation.head`
-equal to the head code and `sequence` 1; in 1968, the head code alone). Neither
-keeps spouses or partners, so keeping heads and spouses together requires both
-arguments to be `FALSE` and the filter above.
+Neither keeps spouses or partners, so keeping heads and spouses together
+requires both arguments to be `FALSE` and the filter above.
 
 ### Variable lists and the crosswalk
 
 The package ships variable lists (`inst/psid-lists/famvars.txt` and
-`indvars.txt`) and the UMich crosswalk (`psid.xlsx`). `getNamesPSID()` returns
-the name of a variable in other waves:
-
-```r
-cwf <- openxlsx::read.xlsx(system.file("psid-lists", "psid.xlsx", package = "localpsidR"))
-getNamesPSID("ER17013", cwf, years = c(2003, 2005, 2007))
-```
+`indvars.txt`). The crosswalk `psid.xlsx` and `cwf` are defined in "Choosing the variables".
 
 `extendVarsPSID()` extends a variable list to waves that are missing from it,
 using the crosswalk:
@@ -215,9 +224,9 @@ the lists have been extended.
 ## New waves
 
 `getPSID()` detects the variable names of waves that are not built in and
-writes them to `psid_waves_detected.csv` (metadata only, no respondent data) in
-the output folder. Import both the IND and the FAM zip of the new wave, then
-build it with `detect_waves = TRUE`:
+writes them to `psid_waves_detected.csv` (variable names and years only, no
+respondent data) in the output folder. Import both the IND and the FAM zip,
+then build with `detect_waves = TRUE`:
 
 ```r
 getPSID(inputdir = "path/to/downloaded-psid", outputdir = "path/to/psid-output")
@@ -226,38 +235,28 @@ build.panel(datadir = "path/to/psid-output",
             detect_waves = TRUE, head_code = <head code>)
 ```
 
-`datadir` must contain `psid_waves_detected.csv` (in the same folder as the
-imported files). `build.panel()` logs a warning listing the variable names it
-uses. The head code is `head_code` if given, otherwise it is carried over from
-the latest built-in wave with a warning (`head_code` is ignored unless
-`detect_waves = TRUE`). For each requested year that was detected,
-`build.panel()` stops if fewer than 80% of the nonzero individual interview
-numbers appear among the family interview numbers. Only the modern
-family-interview label form (`<YYYY> FAMILY INTERVIEW (ID) NUMBER`) is
-detected. Detection is a convenience for a first look: verify the detected
-variable names and the head code against the PSID codebook when the result
-matters, and make the wave permanent by editing `makeids()` (see
-[ADDING_A_WAVE.md](ADDING_A_WAVE.md)).
+`datadir` must contain `psid_waves_detected.csv`. `build.panel()` logs a
+warning listing the variable names it uses. The head code is `head_code` if
+given, otherwise it is carried over from the latest built-in wave with a
+warning (`head_code` is ignored unless `detect_waves = TRUE`). For each
+detected year, `build.panel()` stops if fewer than 80% of the nonzero
+individual interview numbers appear among the family interview numbers. Only
+the modern family-interview label form (`<YYYY> FAMILY INTERVIEW (ID) NUMBER`)
+is detected. Detection is a convenience for a first look: verify the detected
+variable names and the head code against the PSID codebook, and make the wave
+permanent by editing `makeids()` (see [ADDING_A_WAVE.md](ADDING_A_WAVE.md)).
 
 ## Differences from the original
 
-- Fixed the deprecated `data.table` `with = FALSE` syntax, which broke
-  `build.panel()` when a requested family variable was `NA` for a year.
-- Replaced the interactive download with the import of locally downloaded files
-  (`getPSID()`, `getFamilyPSID()`, `getIndPSID()`, `processPSID()`); the package
-  no longer downloads data and does not handle credentials.
+This repository is a fork of [psidR](https://github.com/floswald/psidR) by Florian Oswald.
+The original authors keep full credit; the package is licensed under GPL-3.
+
+- Fixed the deprecated `data.table` `with = FALSE` syntax, which broke `build.panel()` when a requested family variable was `NA`.
+- Replaced the interactive download with local import (`getPSID()`, `getFamilyPSID()`, `getIndPSID()`, `processPSID()`); the package no longer downloads data or handles credentials.
 - Added support for the PSID 2023 wave and a wave framework.
-- Added `extendVarsPSID()` and `data-raw/update-varlists.R` to extend the
-  variable lists to new waves.
-- Added detection of new waves (`detect_waves`, `head_code`,
-  `psid_waves_detected.csv`).
+- Added `extendVarsPSID()` and `data-raw/update-varlists.R` to extend the variable lists to new waves.
+- Added detection of new waves (`detect_waves`, `head_code`, `psid_waves_detected.csv`).
 - Renamed the package to localpsidR.
-
-## Origin and credits
-
-This repository is a fork of [psidR](https://github.com/floswald/psidR) by
-Florian Oswald. The original authors keep full credit for the package. The
-package is licensed under GPL-3.
 
 ## Citation
 
