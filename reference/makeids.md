@@ -1,0 +1,26 @@
+# ID list for mergeing PSID
+
+this list is taken from http://ideas.repec.org/c/boc/bocode/s457040.html
+
+## Usage
+
+``` r
+makeids(extra = NULL)
+```
+
+## Arguments
+
+- extra:
+
+  optional data.frame of extra (not yet built-in) waves to append to the
+  built-in table, with columns year, ind.interview, ind.seq, ind.head,
+  fam.interview and ind.head.num. Defaults to NULL (built-in waves
+  only).
+
+## Details
+
+this function hardcodes the PSID variable names of "interview number"
+from both family and individual file for each wave, as well as "sequence
+number", "relation to head" and numeric value x of that variable such
+that "relation to head" == x means the individual is the head. Varies
+over time.
