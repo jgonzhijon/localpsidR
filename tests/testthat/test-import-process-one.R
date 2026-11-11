@@ -126,3 +126,87 @@ test_that("a zip with a path traversal entry is rejected", {
   expect_match(conditionMessage(err), "../evil.txt", fixed = TRUE)
   expect_false(file.exists(outside))
 })
+
+test_that("unsafe_zip_entries accepts safe entry names", {
+  safe <- c(
+    "FAM1985ER.txt",
+    "subdir/FAM1985ER.sas",
+    "a\\b\\file.txt",
+    "Cfile.txt",
+    "...",
+    "..foo",
+    "foo..bar",
+    "~$file.txt"
+  )
+  expect_identical(localpsidR:::unsafe_zip_entries(safe), character())
+})
+
+test_that("unsafe_zip_entries rejects traversal and absolute entries", {
+  unsafe <- c(
+    "..\\..\\x",
+    "../x",
+    "sub/../x",
+    "sub/..",
+    "/etc/x",
+    "\\x",
+    "C:\\x",
+    "C:/x",
+    "c:x",
+    "~/x"
+  )
+  expect_setequal(localpsidR:::unsafe_zip_entries(unsafe), unsafe)
+})
+
+test_that("paths_outside_dir accounts for the trailing separator", {
+  expect_false(localpsidR:::paths_outside_dir("out", "out/file.txt"))
+  expect_false(localpsidR:::paths_outside_dir("out", "out/sub/file.txt"))
+  expect_false(localpsidR:::paths_outside_dir("out", "out"))
+  expect_true(localpsidR:::paths_outside_dir("out", "out-evil/file.txt"))
+  expect_identical(
+    localpsidR:::paths_outside_dir("out", character()),
+    logical(0)
+  )
+})
+
+test_that("paths_outside_dir handles Windows-style paths", {
+  dir <- "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x"
+
+  expect_false(localpsidR:::paths_outside_dir(
+    dir, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x\\FAM2023ER.txt",
+    ignore.case = TRUE
+  ))
+  expect_false(localpsidR:::paths_outside_dir(
+    dir, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x/sub\\a.txt",
+    ignore.case = TRUE
+  ))
+  expect_false(localpsidR:::paths_outside_dir(
+    "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x\\",
+    "C:/Users/runneradmin/AppData/Local/Temp/psid_x/a.txt",
+    ignore.case = TRUE
+  ))
+  expect_false(localpsidR:::paths_outside_dir(
+    "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x/",
+    "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x\\a.txt",
+    ignore.case = TRUE
+  ))
+  expect_true(localpsidR:::paths_outside_dir(
+    dir, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x-evil\\a.txt",
+    ignore.case = TRUE
+  ))
+  expect_true(localpsidR:::paths_outside_dir(
+    dir, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\other\\a.txt",
+    ignore.case = TRUE
+  ))
+  expect_false(localpsidR:::paths_outside_dir(
+    dir, "c:\\users\\runneradmin\\appdata\\local\\temp\\psid_x\\a.txt",
+    ignore.case = TRUE
+  ))
+  expect_true(localpsidR:::paths_outside_dir(
+    dir, "c:\\users\\runneradmin\\appdata\\local\\temp\\psid_x\\a.txt",
+    ignore.case = FALSE
+  ))
+  expect_false(localpsidR:::paths_outside_dir(
+    dir, "C:\\Users\\runneradmin\\AppData\\Local\\Temp\\psid_x",
+    ignore.case = TRUE
+  ))
+})

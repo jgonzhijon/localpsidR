@@ -286,6 +286,79 @@ pick_pair <- function(files) {
   list(txt = t, sas = s)
 }
 
+#' Identify unsafe zip entry names
+#'
+#' Checks zip entry names lexically, without touching the file system, for
+#' path-traversal and absolute-path forms that could make extraction escape
+#' the target directory. Backslashes are treated as separators, so
+#' Windows-style entries are rejected on every platform.
+#'
+#' An entry is unsafe when, after backslashes are converted to forward
+#' slashes, it starts with `/` (absolute Unix path or UNC path), starts with a
+#' drive letter (`C:`), starts with `~/` or equals `~` (home-relative), or
+#' contains a `..` component.
+#'
+#' @param entries Character vector of entry names as returned by
+#'   `utils::unzip(..., list = TRUE)$Name`.
+#' @return Character vector of the unsafe entries (possibly length 0).
+#' @noRd
+unsafe_zip_entries <- function(entries) {
+  entries <- as.character(entries)
+  if (length(entries) == 0L) {
+    return(character())
+  }
+
+  norm <- gsub("\\", "/", entries, fixed = TRUE)
+  has_dotdot <- vapply(
+    strsplit(norm, "/", fixed = TRUE),
+    function(parts) any(parts == ".."),
+    logical(1)
+  )
+
+  unsafe <- grepl("^/", norm) |
+    grepl("^[A-Za-z]:", norm) |
+    grepl("^~(/|$)", norm) |
+    has_dotdot
+
+  entries[unsafe]
+}
+
+#' Which paths fall outside a directory?
+#'
+#' Compares `paths` against a directory `dir` lexically, so it is safe to test
+#' with Windows-style strings on any platform. Backslashes are converted to
+#' forward slashes, a trailing separator on `dir` is dropped, and both sides
+#' are lower-cased when `ignore.case` is true. A path is outside when it is
+#' neither `dir` itself nor a descendant, i.e. it does not start with `dir`
+#' followed by `/`; this keeps a sibling such as `out-evil` outside even
+#' though it shares a prefix with `out`.
+#'
+#' @param dir A single directory path.
+#' @param paths Character vector of paths.
+#' @param ignore.case Logical, whether to compare case-insensitively.
+#' @return A logical vector with one element per `paths`.
+#' @noRd
+paths_outside_dir <- function(dir, paths,
+                              ignore.case = .Platform$OS.type == "windows") {
+  to_slash <- function(x) {
+    gsub("\\", "/", as.character(x), fixed = TRUE)
+  }
+
+  dir <- to_slash(dir)[1L]
+  paths <- to_slash(paths)
+
+  # Drop trailing separators but keep a bare root such as "/".
+  dir <- sub("(.+)/+$", "\\1", dir)
+
+  if (isTRUE(ignore.case)) {
+    dir <- tolower(dir)
+    paths <- tolower(paths)
+  }
+
+  prefix <- paste0(dir, "/")
+  paths != dir & !startsWith(paths, prefix)
+}
+
 #' Process one PSID job into a .rda or .rds file
 #'
 #' Reads a job (one zip, one directory, or several loose files), picks the
@@ -314,17 +387,9 @@ process_one <- function(files, out, format = c("rda", "rds"),
     search <- list.files(files, recursive = TRUE, full.names = TRUE)
   } else if (length(files) == 1L && grepl("\\.zip$", tolower(files))) {
     entries <- utils::unzip(files, list = TRUE)$Name
-    if (length(entries) > 0L) {
-      unsafe <- vapply(entries, function(entry) {
-        grepl("^[/\\\\]", entry) ||
-          grepl("^[A-Za-z]:", entry) ||
-          any(strsplit(entry, "[/\\\\]", perl = TRUE)[[1]] == "..")
-      }, logical(1))
-
-      if (any(unsafe)) {
-        stop("zip contains an unsafe entry: ",
-             entries[which(unsafe)[1]], call. = FALSE)
-      }
+    unsafe <- unsafe_zip_entries(entries)
+    if (length(unsafe) > 0L) {
+      stop("zip contains an unsafe entry: ", unsafe[1], call. = FALSE)
     }
 
     extracted <- utils::unzip(files, exdir = tmp)
@@ -332,10 +397,17 @@ process_one <- function(files, out, format = c("rda", "rds"),
       stop("no files extracted from ", basename(files), call. = FALSE)
     }
 
-    tmp_norm <- normalizePath(tmp, mustWork = TRUE)
-    extracted_norm <- normalizePath(extracted, mustWork = TRUE)
-    outside <- !startsWith(extracted_norm,
-                           paste0(tmp_norm, .Platform$file.sep))
+    # The lexical check in unsafe_zip_entries() is the primary protection: it
+    # runs before extraction and rejects entries that could write outside tmp.
+    # This post-extraction check only guards against entries whose real path
+    # resolves outside tmp (for example a symlink entry); files are listed
+    # from tmp so both sides share the same root string.
+    extracted_paths <- list.files(tmp, recursive = TRUE, full.names = TRUE,
+                                  all.files = TRUE)
+    outside <- paths_outside_dir(
+      normalizePath(tmp, mustWork = TRUE, winslash = "/"),
+      normalizePath(extracted_paths, mustWork = TRUE, winslash = "/")
+    )
     if (any(outside)) {
       stop("zip contains entries that extract outside the target directory",
            call. = FALSE)
