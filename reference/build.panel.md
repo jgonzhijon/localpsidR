@@ -162,16 +162,16 @@ indvars <- data.frame(year=c(1985,1986),ind.weight=c("ER30497","ER30534"))
 d <- build.panel(datadir=my.dir,fam.vars=famvars,
                  ind.vars=indvars,
                  heads.only=FALSE)  
-#> INFO [2026-11-11 10:49:34] found FAM1985ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] found FAM1986ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] everything already downloaded. Build dataset now
-#> INFO [2026-11-11 10:49:34] localpsidR: Loading Family data from .rda files
-#> INFO [2026-11-11 10:49:34] localpsidR: loaded individual file: /tmp/RtmpyOIcDJ/IND2019ER.RData
-#> INFO [2026-11-11 10:49:34] localpsidR: total memory load in MB: 1
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1985
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1986
-#> INFO [2026-11-11 10:49:34] balanced design reduces sample from 36 to 24
-#> INFO [2026-11-11 10:49:34] End of build.panel
+#> INFO [2026-11-11 11:29:37] found FAM1985ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] found FAM1986ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] everything already downloaded. Build dataset now
+#> INFO [2026-11-11 11:29:37] localpsidR: Loading Family data from .rda files
+#> INFO [2026-11-11 11:29:37] localpsidR: loaded individual file: /tmp/Rtmphp2ZK8/IND2019ER.RData
+#> INFO [2026-11-11 11:29:37] localpsidR: total memory load in MB: 1
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1985
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1986
+#> INFO [2026-11-11 11:29:37] balanced design reduces sample from 36 to 24
+#> INFO [2026-11-11 11:29:37] End of build.panel
 
 # see what happens if we drop non-heads
 # only the ones who are heads in BOTH years 
@@ -179,18 +179,18 @@ d <- build.panel(datadir=my.dir,fam.vars=famvars,
 d <- build.panel(datadir=my.dir,fam.vars=famvars,
                  ind.vars=indvars,
                  heads.only=TRUE)  
-#> INFO [2026-11-11 10:49:34] found FAM1985ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] found FAM1986ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] everything already downloaded. Build dataset now
-#> INFO [2026-11-11 10:49:34] localpsidR: Loading Family data from .rda files
-#> INFO [2026-11-11 10:49:34] localpsidR: loaded individual file: /tmp/RtmpyOIcDJ/IND2019ER.RData
-#> INFO [2026-11-11 10:49:34] localpsidR: total memory load in MB: 1
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1985
-#> INFO [2026-11-11 10:49:34] dropping non-heads leaves 10 obs
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1986
-#> INFO [2026-11-11 10:49:34] dropping non-heads leaves 15 obs
-#> INFO [2026-11-11 10:49:34] balanced design reduces sample from 20 to 4
-#> INFO [2026-11-11 10:49:34] End of build.panel
+#> INFO [2026-11-11 11:29:37] found FAM1985ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] found FAM1986ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] everything already downloaded. Build dataset now
+#> INFO [2026-11-11 11:29:37] localpsidR: Loading Family data from .rda files
+#> INFO [2026-11-11 11:29:37] localpsidR: loaded individual file: /tmp/Rtmphp2ZK8/IND2019ER.RData
+#> INFO [2026-11-11 11:29:37] localpsidR: total memory load in MB: 1
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1985
+#> INFO [2026-11-11 11:29:37] dropping non-heads leaves 10 obs
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1986
+#> INFO [2026-11-11 11:29:37] dropping non-heads leaves 15 obs
+#> INFO [2026-11-11 11:29:37] balanced design reduces sample from 20 to 4
+#> INFO [2026-11-11 11:29:37] End of build.panel
 print(d[order(pid)],nrow=Inf)
 #>       money   age interview ID1968 pernum sequence relation.head ind.weight
 #>       <num> <int>     <int>  <int>  <int>    <num>         <num>      <num>
@@ -211,17 +211,17 @@ print(d[order(pid)],nrow=Inf)
 d <- build.panel(datadir=my.dir,fam.vars=famvars,
                  ind.vars=indvars,heads.only=TRUE,
                  design="all")  
-#> INFO [2026-11-11 10:49:34] found FAM1985ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] found FAM1986ER.rda already downloaded
-#> INFO [2026-11-11 10:49:34] everything already downloaded. Build dataset now
-#> INFO [2026-11-11 10:49:34] localpsidR: Loading Family data from .rda files
-#> INFO [2026-11-11 10:49:34] localpsidR: loaded individual file: /tmp/RtmpyOIcDJ/IND2019ER.RData
-#> INFO [2026-11-11 10:49:34] localpsidR: total memory load in MB: 1
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1985
-#> INFO [2026-11-11 10:49:34] dropping non-heads leaves 10 obs
-#> INFO [2026-11-11 10:49:34] localpsidR: currently working on data for year 1986
-#> INFO [2026-11-11 10:49:34] dropping non-heads leaves 15 obs
-#> INFO [2026-11-11 10:49:34] End of build.panel
+#> INFO [2026-11-11 11:29:37] found FAM1985ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] found FAM1986ER.rda already downloaded
+#> INFO [2026-11-11 11:29:37] everything already downloaded. Build dataset now
+#> INFO [2026-11-11 11:29:37] localpsidR: Loading Family data from .rda files
+#> INFO [2026-11-11 11:29:37] localpsidR: loaded individual file: /tmp/Rtmphp2ZK8/IND2019ER.RData
+#> INFO [2026-11-11 11:29:37] localpsidR: total memory load in MB: 1
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1985
+#> INFO [2026-11-11 11:29:37] dropping non-heads leaves 10 obs
+#> INFO [2026-11-11 11:29:37] localpsidR: currently working on data for year 1986
+#> INFO [2026-11-11 11:29:37] dropping non-heads leaves 15 obs
+#> INFO [2026-11-11 11:29:37] End of build.panel
 print(d[order(pid)],nrow=Inf)
 #>          money   age interview ID1968 pernum sequence relation.head ind.weight
 #>          <num> <int>     <int>  <int>  <int>    <num>         <num>      <num>
